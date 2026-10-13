@@ -113,6 +113,8 @@ export const translations = {
     eventLocationPlaceholder: 'אופציונלי',
     noEvents: 'עדיין לא נוצרו כנסים',
     todayBadge: 'היום',
+    pastBadge: 'עבר',
+    upcomingBadge: 'עתידי',
     // LeadsTable headers
     colFullName: 'שם מלא',
     colPhone: 'טלפון',
@@ -280,6 +282,8 @@ export const translations = {
     eventLocationPlaceholder: 'Optional',
     noEvents: 'No events created yet',
     todayBadge: 'Today',
+    pastBadge: 'Past',
+    upcomingBadge: 'Upcoming',
     // RepresentativesManager
     repsTitle: 'Representatives Management',
     repsSubtitle: 'Each rep automatically receives leads assigned to them',

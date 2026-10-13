@@ -148,10 +148,12 @@ function EventsContent() {
               </thead>
               <tbody className="divide-y divide-border">
                 {events.map(ev => {
-                  const isToday = ev.event_date === today;
+                  const endDate = ev.event_end_date || ev.event_date;
+                  const isToday = ev.event_date <= today && endDate >= today;
+                  const isPast = endDate < today;
                   const isEditing = editingId === ev.id;
                   return (
-                    <tr key={ev.id} className={isToday ? 'bg-primary/5' : ''}>
+                    <tr key={ev.id} className={isToday ? 'bg-primary/10 border-r-4 border-primary' : isPast ? 'opacity-60' : ''}>
                       <td className="px-5 py-3.5 whitespace-nowrap">
                         {isEditing ? (
                           <div className="flex flex-col gap-1">
@@ -164,7 +166,13 @@ function EventsContent() {
                             {ev.event_end_date && ev.event_end_date !== ev.event_date && (
                               <span className="text-muted-foreground"> — {format(new Date(ev.event_end_date), 'dd/MM/yyyy')}</span>
                             )}
-                            {isToday && <span className="mr-2 inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">{t.todayBadge}</span>}
+                            {isToday ? (
+                              <span className="mr-2 inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">{t.todayBadge}</span>
+                            ) : isPast ? (
+                              <span className="mr-2 inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-muted text-muted-foreground">{t.pastBadge}</span>
+                            ) : (
+                              <span className="mr-2 inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700">{t.upcomingBadge}</span>
+                            )}
                           </>
                         )}
                       </td>
