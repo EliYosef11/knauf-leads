@@ -1,0 +1,32 @@
+{
+  "name": "Event",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05db\u05e0\u05e1"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05d4\u05db\u05e0\u05e1 (\u05ea\u05d0\u05e8\u05d9\u05da \u05d4\u05ea\u05d7\u05dc\u05d4)"
+    },
+    "event_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05e1\u05d9\u05d5\u05dd \u05d4\u05db\u05e0\u05e1 (\u05d0\u05dd \u05d4\u05db\u05e0\u05e1 \u05d4\u05d5\u05d0 \u05d9\u05d5\u05ea\u05e8 \u05de\u05d9\u05d5\u05dd \u05d0\u05d7\u05d3)"
+    },
+    "location": {
+      "type": "string",
+      "description": "\u05de\u05d9\u05e7\u05d5\u05dd \u05d4\u05db\u05e0\u05e1"
+    },
+    "notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea"
+    }
+  },
+  "required": [
+    "name",
+    "event_date"
+  ]
+}

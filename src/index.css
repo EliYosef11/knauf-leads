@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 215 50% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 50% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 50% 12%;
+    --primary: 200 100% 44%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 200 60% 96%;
+    --secondary-foreground: 210 100% 25%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 200 100% 24%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 200 100% 44%;
+    --chart-1: 200 100% 44%;
+    --chart-2: 30 95% 55%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 215 50% 12%;
+    --sidebar-primary: 200 100% 44%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 200 60% 96%;
+    --sidebar-accent-foreground: 210 100% 25%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 200 100% 44%;
+    --font-heebo: 'Heebo', sans-serif;
+    --font-assistant: 'Assistant', sans-serif;
+  }
+
+  .dark {
+    --background: 215 50% 8%;
+    --foreground: 0 0% 98%;
+    --card: 215 50% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 215 50% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 212 100% 55%;
+    --primary-foreground: 215 50% 8%;
+    --secondary: 215 40% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 215 40% 16%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 200 100% 24%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 215 40% 18%;
+    --input: 215 40% 18%;
+    --ring: 212 100% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    direction: rtl;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-heebo);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-assistant);
+    letter-spacing: -0.02em;
+  }
+
+  .knauf-gradient {
+    background: linear-gradient(135deg, hsl(200 100% 44%) 0%, hsl(210 100% 25%) 100%);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+}
