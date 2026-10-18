@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -37,7 +37,7 @@ function EventsContent() {
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['events'],
-    queryFn: () => base44.entities.Event.list('-event_date', 200),
+    queryFn: () => db.Event.list('-event_date', 200),
   });
 
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -46,7 +46,7 @@ function EventsContent() {
     e.preventDefault();
     if (!name.trim() || !eventDate) return;
     setSaving(true);
-    await base44.entities.Event.create({ name: name.trim(), event_date: eventDate, event_end_date: multiDay && eventEndDate ? eventEndDate : null, location: location.trim() });
+    await db.Event.create({ name: name.trim(), event_date: eventDate, event_end_date: multiDay && eventEndDate ? eventEndDate : null, location: location.trim() });
     setName(''); setLocation(''); setEventEndDate(''); setMultiDay(false);
     queryClient.invalidateQueries({ queryKey: ['events'] });
     setSaving(false);
@@ -59,14 +59,14 @@ function EventsContent() {
 
   const saveEdit = async () => {
     if (!editFields.name.trim() || !editFields.event_date) return;
-    await base44.entities.Event.update(editingId, { name: editFields.name.trim(), event_date: editFields.event_date, event_end_date: editFields.event_end_date || null, location: editFields.location.trim() });
+    await db.Event.update(editingId, { name: editFields.name.trim(), event_date: editFields.event_date, event_end_date: editFields.event_end_date || null, location: editFields.location.trim() });
     setEditingId(null);
     queryClient.invalidateQueries({ queryKey: ['events'] });
   };
 
   const removeEvent = async (id) => {
     if (!confirm(t.deleteEventConfirm)) return;
-    await base44.entities.Event.delete(id);
+    await db.Event.delete(id);
     queryClient.invalidateQueries({ queryKey: ['events'] });
   };
 

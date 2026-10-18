@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -35,7 +35,7 @@ function RepsContent() {
 
   const { data: reps = [], isLoading } = useQuery({
     queryKey: ['reps-all'],
-    queryFn: () => base44.entities.Representative.list('sort_order', 200),
+    queryFn: () => db.Representative.list('sort_order', 200),
   });
 
   // Sync localReps from server only when localReps is null (initial load or after add/delete)
@@ -52,7 +52,7 @@ function RepsContent() {
     if (!name.trim()) return;
     setSaving(true);
     const maxOrder = displayReps.reduce((m, r) => Math.max(m, r.sort_order || 0), 0);
-    const newRep = await base44.entities.Representative.create({
+    const newRep = await db.Representative.create({
       name: name.trim(),
       email: email.trim(),
       role_title: roleTitle.trim(),
@@ -66,14 +66,14 @@ function RepsContent() {
   };
 
   const updateRep = async (id, patch) => {
-    await base44.entities.Representative.update(id, patch);
+    await db.Representative.update(id, patch);
     setLocalReps(prev => prev ? prev.map(r => r.id === id ? { ...r, ...patch } : r) : null);
     queryClient.invalidateQueries({ queryKey: ['reps-active'] });
   };
 
   const removeRep = async (id) => {
     if (!confirm(t.deleteRepConfirm)) return;
-    await base44.entities.Representative.delete(id);
+    await db.Representative.delete(id);
     setLocalReps(prev => prev ? prev.filter(r => r.id !== id) : null);
     queryClient.invalidateQueries({ queryKey: ['reps-active'] });
   };
@@ -89,7 +89,7 @@ function RepsContent() {
       .map((rep, idx) => ({ rep, newOrder: idx + 1 }))
       .filter(({ rep, newOrder }) => rep.sort_order !== newOrder);
     for (const { rep, newOrder } of updates) {
-      await base44.entities.Representative.update(rep.id, { sort_order: newOrder });
+      await db.Representative.update(rep.id, { sort_order: newOrder });
     }
     queryClient.invalidateQueries({ queryKey: ['reps-active'] });
   };

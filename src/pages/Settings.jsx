@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -46,7 +47,7 @@ function SettingsContent() {
 
   useEffect(() => {
     (async () => {
-      const list = await base44.entities.NotificationSettings.list();
+      const list = await db.NotificationSettings.list();
       if (list.length > 0) {
         setSettings(list[0]);
         setEmails(list[0].notification_emails || []);
@@ -73,9 +74,9 @@ function SettingsContent() {
     setSaved(false);
     const payload = { notification_emails: emails, is_active: isActive, label: 'התראות לידים', reminder_days: Number(reminderDays) || 7 };
     if (settings?.id) {
-      await base44.entities.NotificationSettings.update(settings.id, payload);
+      await db.NotificationSettings.update(settings.id, payload);
     } else {
-      const created = await base44.entities.NotificationSettings.create(payload);
+      const created = await db.NotificationSettings.create(payload);
       setSettings(created);
     }
     setSaving(false);

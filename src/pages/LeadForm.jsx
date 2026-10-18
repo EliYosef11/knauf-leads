@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -44,7 +44,7 @@ export default function LeadForm() {
   const today = format(new Date(), 'yyyy-MM-dd');
   const { data: allEvents = [] } = useQuery({
     queryKey: ['events-today', today],
-    queryFn: () => base44.entities.Event.filter({ event_date: { $lte: today } }, '-event_date', 50)
+    queryFn: () => db.Event.filter({ event_date: { $lte: today } }, '-event_date', 50)
   });
   // Pick an event that started on or before today, and ends on or after today
   const currentEvent = allEvents.find(ev => {
@@ -55,7 +55,7 @@ export default function LeadForm() {
   // Active representatives
   const { data: reps = [] } = useQuery({
     queryKey: ['reps-active'],
-    queryFn: () => base44.entities.Representative.filter({ is_active: true }, 'sort_order', 100)
+    queryFn: () => db.Representative.filter({ is_active: true }, 'sort_order', 100)
   });
 
   const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
@@ -81,7 +81,7 @@ export default function LeadForm() {
     setSubmitting(true);
     try {
       const assignedRep = reps.find((r) => r.name === form.assigned_to);
-      await base44.entities.Lead.create({
+      await db.Lead.create({
         ...form,
         event_name: currentEvent?.name || 'ליד כללי',
         event_id: currentEvent?.id || '',

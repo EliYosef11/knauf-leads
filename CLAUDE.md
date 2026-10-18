@@ -138,3 +138,12 @@ node scripts/verify-supabase-import.mjs # השוואה שדה-שדה מול הג
 - PostgREST דורש שכל האובייקטים בהכנסה מרובה יישאו בדיוק את אותם מפתחות — לכן `pick()`
   בסקריפט הייבוא ממלא כל שדה חסר בברירת מחדל ולא משמיט אותו.
 - התוכנית המלאה והשלבים הבאים: [MIGRATION.md](MIGRATION.md).
+
+### שכבת הנתונים (אחרי שלב 1)
+קוד המסכים קורא ל-`db.X` מ-[src/api/db.js](src/api/db.js) — אותו ממשק שהיה ל-`base44.entities.X`,
+מעל Supabase. הלוגיקה ב-`src/api/dbFactory.js` (מקבלת לקוח בהזרקה, ולכן ניתנת לבדיקה מ-Node).
+`npx base44 dev` עדיין נדרש להרצה מקומית — ההתחברות והפונקציות עדיין על Base44.
+
+```bash
+node scripts/test-db-adapter.mjs   # 16 בדיקות לשכבת הנתונים מול Supabase
+```

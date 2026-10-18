@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -90,13 +90,13 @@ export default function MyLeads() {
 
   const { data: reps = [] } = useQuery({
     queryKey: ['reps-active'],
-    queryFn: () => base44.entities.Representative.filter({ is_active: true }, 'sort_order', 100),
+    queryFn: () => db.Representative.filter({ is_active: true }, 'sort_order', 100),
   });
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ['my-leads', selectedRep],
     queryFn: () => selectedRep
-      ? base44.entities.Lead.filter({ assigned_to: selectedRep }, '-created_date', 500)
+      ? db.Lead.filter({ assigned_to: selectedRep }, '-created_date', 500)
       : Promise.resolve([]),
     enabled: !!selectedRep,
   });
@@ -282,7 +282,7 @@ function LeadCard({ lead, t, selectedRep }) {
   const [showTransfer, setShowTransfer] = useState(false);
 
   const update = async (data) => {
-    await base44.entities.Lead.update(lead.id, data);
+    await db.Lead.update(lead.id, data);
     queryClient.invalidateQueries({ queryKey: ['my-leads'] });
   };
 

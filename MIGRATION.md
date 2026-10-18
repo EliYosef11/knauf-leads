@@ -31,10 +31,21 @@
 - מפתחות: `VITE_SUPABASE_URL` ו-`VITE_SUPABASE_PUBLISHABLE_KEY` ב-`.env.local`;
   `SUPABASE_SECRET_KEY` (עוקף RLS, לשימוש סקריפטים בלבד) גם הוא שם ומחוץ ל-git.
 
-### שלב 1 — שכבת גישה לנתונים
-- `src/api/` עובר מ-`@base44/sdk` ל-Supabase client, מאחורי ממשק זהה (`list` / `create` / `update`)
-  כדי שקוד המסכים כמעט לא ישתנה.
-- אימות: כל מסך עובד מול Supabase מקומית, והרנדור זהה לצילומי המסך של הפרודקשן.
+### ✅ שלב 1 — שכבת גישה לנתונים (הושלם 18.10.2026)
+- `src/api/dbFactory.js` מממש את ממשק ה-entities של Base44 (`list` / `filter` / `get` / `create` /
+  `update` / `delete`) מעל Supabase, כולל תרגום המיון (`'-created_date'`) והאופרטורים
+  (`$lte $lt $gte $gt $ne $in`). `src/api/db.js` הוא מופע הדפדפן.
+- כל קריאות `base44.entities.X` בקוד המסכים הוחלפו ב-`db.X`. שום קומפוננטה, סגנון או טקסט לא השתנו.
+- `node scripts/test-db-adapter.mjs` — 16 בדיקות מול הנתונים האמיתיים (מיון, limit, סינון,
+  `$lte`, מערכים, עברית, ומחזור חיים create→update→delete על רשומה זמנית). כולן עוברות.
+- [supabase/policies.sql](supabase/policies.sql) הורץ: אורח יכול לקרוא כנסים ונציגים ולהוסיף ליד —
+  **ולא לקרוא לידים**. אומת מהדפדפן: קריאת `leads` עם מפתח הדפדפן מחזירה מערך ריק.
+- הטופס הציבורי כבר רץ מקומית מול Supabase (אומת ברשת: `events?...event_date=lte...`,
+  `representatives?...is_active=eq.true`), והעיצוב זהה.
+
+**מה עדיין על Base44 בשלב הזה:** ההתחברות (`src/lib/AuthContext.jsx`) והפונקציות
+(`base44.functions.invoke` ב-Settings, TransferLeadDialog, LeadDetailsDialog) — שלבים 2 ו-3.
+לכן מסכי הניהול והנציגים לא יציגו לידים עד שתהיה התחברות, וזה מכוון.
 
 ### שלב 2 — התחברות והרשאות (כאן נסגר גם חור האבטחה)
 - Supabase Auth עם Google. למנהל — דגל אדמין; לנציגים — חשבון לכל נציג (`Representative.email`).

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -26,21 +26,21 @@ function CampaignsContent() {
 
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ['campaigns'],
-    queryFn: () => base44.entities.Campaign.list('name', 100),
+    queryFn: () => db.Campaign.list('name', 100),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Campaign.create(data),
+    mutationFn: (data) => db.Campaign.create(data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['campaigns'] }); setAdding(false); setForm(EMPTY); },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Campaign.update(id, data),
+    mutationFn: ({ id, data }) => db.Campaign.update(id, data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['campaigns'] }); setEditing(null); },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Campaign.delete(id),
+    mutationFn: (id) => db.Campaign.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campaigns'] }),
   });
 

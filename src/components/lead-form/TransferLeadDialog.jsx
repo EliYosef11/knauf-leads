@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, ArrowLeftRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 
 export default function TransferLeadDialog({ lead, currentRep, open, onClose, onTransferred }) {
   const [targetRep, setTargetRep] = useState('');
@@ -14,7 +15,7 @@ export default function TransferLeadDialog({ lead, currentRep, open, onClose, on
 
   const { data: reps = [] } = useQuery({
     queryKey: ['reps-active'],
-    queryFn: () => base44.entities.Representative.filter({ is_active: true }, 'sort_order', 100),
+    queryFn: () => db.Representative.filter({ is_active: true }, 'sort_order', 100),
   });
 
   const availableReps = reps.filter(r => r.name !== currentRep);

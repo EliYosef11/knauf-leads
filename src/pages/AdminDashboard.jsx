@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -56,12 +56,12 @@ function DashboardContent() {
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ['leads'],
-    queryFn: () => base44.entities.Lead.list('-created_date', 500),
+    queryFn: () => db.Lead.list('-created_date', 500),
   });
 
   const { data: events = [] } = useQuery({
     queryKey: ['events'],
-    queryFn: () => base44.entities.Event.list(),
+    queryFn: () => db.Event.list(),
   });
 
 

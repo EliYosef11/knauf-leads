@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Check, X, Loader2, Star, CheckCircle2, Clock, Trash2, Bell } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { db } from '@/api/db';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import InterestSelector from '../lead-form/InterestSelector';
 
@@ -25,7 +25,7 @@ export default function LeadDetailsDialog({ lead, onClose, t = {} }) {
 
   const { data: representatives = [] } = useQuery({
     queryKey: ['representatives'],
-    queryFn: () => base44.entities.Representative.filter({ is_active: true }, 'sort_order', 100),
+    queryFn: () => db.Representative.filter({ is_active: true }, 'sort_order', 100),
   });
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function LeadDetailsDialog({ lead, onClose, t = {} }) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await base44.entities.Lead.update(lead.id, formData);
+      await db.Lead.update(lead.id, formData);
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       setIsEditing(false);
     } catch (e) {
@@ -78,7 +78,7 @@ export default function LeadDetailsDialog({ lead, onClose, t = {} }) {
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    await base44.entities.Lead.delete(lead.id);
+    await db.Lead.delete(lead.id);
     queryClient.invalidateQueries({ queryKey: ['leads'] });
     onClose();
   };
