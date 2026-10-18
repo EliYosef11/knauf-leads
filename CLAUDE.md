@@ -17,13 +17,34 @@
 ## הרצה מקומית
 
 ```bash
-npx base44 dev
+npx base44 dev     # בקאנד מקומי על 4400 + Vite על 5173, פרוקסי /api → localhost:4400
+npm run seed       # בטרמינל שני — מזריע נתוני דמו
 ```
 
-מריץ בקאנד Base44 מקומי על 4400 + Vite על 5173 עם פרוקסי `/api → localhost:4400`.
 `npm run dev` לבדו **לא מספיק** — כל קריאות ה-API יחזירו 404 בלי הבקאנד המקומי.
 
-הרצת backend functions מקומית דורשת Deno (לא מותקן כרגע במכונה).
+**ה-DB המקומי יושב בזיכרון ונמחק בכל הפעלה מחדש של `base44 dev`.**
+לכן יש `npm run seed` (`scripts/seed-dev.mjs` + `scripts/seed-data.json`) שמזריע 13 כנסים,
+19 נציגים, הגדרות התראות ו-4 לידים לדוגמה. הסקריפט אידמפוטנטי — מדלג על ישות שכבר מאוכלסת.
+שמות הנציגים אמיתיים אך **כתובות המייל שלהם הוחלפו בכתובות בדיקה** (`example.com`) כדי שבדיקה
+מקומית לא תשלח מייל לנציג אמיתי. הלידים ב-seed מומצאים — אין בקוד נתונים אישיים אמיתיים.
+
+### מגבלה: backend functions לא רצות על המק הזה
+Deno מותקן (`~/.deno/bin/deno`, צריך להיות ב-PATH לפני `base44 dev`), אבל ריצת הפונקציות
+המקומית משתמשת ב-`workerd` שדורש macOS 13+. על macOS 12.7.6 כאן זה נכשל:
+`dyld: Symbol not found ... workerd` → הפונקציה מחזירה `write EPIPE` / 500.
+**לכן בדיקת פונקציות נעשית מול אפליקציית העותק ב-Base44** (`npx base44 functions deploy <name>`),
+לא מקומית. שאר הפיתוח (UI, entities, זרימות נתונים) עובד מקומית ללא בעיה.
+
+### גיבויים
+`backups/prod-export-YYYY-MM-DD.json` — ייצוא מלא של הנתונים מפרודקשן (ב-18.10.2026: 55 לידים,
+13 כנסים, 19 נציגים, הגדרות). התיקייה ב-`.gitignore` כי יש בה פרטים אישיים של לידים אמיתיים.
+לייצוא מחודש:
+
+```bash
+export PATH="$HOME/.deno/bin:$PATH"
+npx base44 exec --app-id 6a15a08fdeebfd8254f3814d < script.ts   # script.ts מדפיס JSON
+```
 
 ## ארכיטקטורה
 
@@ -72,6 +93,15 @@ const { accessToken } = await base44.asServiceRole.connectors.getConnection('gma
 ו-cron יומי → `sendReminderEmail`. באפליקציית העותק הן נכשלו ב-deploy
 (`409 workflows_enabled` — האפליקציה החדשה משתמשת ב-Workflows ולכן automations ישנים חסומים).
 הגדרות ה-`automations` שנשארו בתוך `function.jsonc` הן שאריות legacy עם `is_active: false`.
+
+## חוב אבטחה פתוח (לא תוקן — דורש החלטה)
+
+1. **סיסמת המנהל קשיחה בקוד הצד-לקוח** (`src/components/admin/AdminGuard.jsx`, השוואת מחרוזת
+   מול `password === '...'`). המחרוזת נמצאת בבאנדל הציבורי של האתר החי — כל מי שפותח את
+   `/assets/index-*.js` יכול לחלץ אותה ולהיכנס ל-`/admin`, שם חשופים שמות, טלפונים ומיילים של
+   לידים אמיתיים. לתקן ע"י אימות אמיתי (Base44 auth + הרשאת אדמין על ה-User) ולא שער סיסמה בפרונט.
+2. **`requiresAuth: false`** ב-`src/api/base44Client.js` — יש לוודא מה מדיניות ה-RLS על
+   entity `Lead` בצד Base44; אם הקריאה פתוחה, נתוני הלידים נגישים דרך ה-API גם בלי מסך הניהול.
 
 ## כללי עבודה בפרויקט
 

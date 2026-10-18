@@ -1,0 +1,290 @@
+{
+  "_comment": "נתוני דמו לסביבת פיתוח בלבד. שמות הנציגים אמיתיים אך כתובות המייל הוחלפו בכתובות בדיקה (example.com) כדי שבדיקות לא ישלחו מיילים לנציגים אמיתיים. הלידים כאן מומצאים.",
+  "Event": [
+    {
+      "name": "כנס תכנון המגדלים ומעטפת המבנה",
+      "event_date": "2026-10-13",
+      "location": ""
+    },
+    {
+      "name": "כנס פסגת המגדלים והתכנון האורבני בישראל - בית ונוי",
+      "event_date": "2026-11-09",
+      "location": "מלון דיויד אינטרקונטיננטל - ת\"א"
+    },
+    {
+      "name": "כנס הנדל\"ן השנתי - ארגון הקבלנים והבונים מחוז תל אביב והמרכז באילת",
+      "event_date": "2026-11-04",
+      "event_end_date": "2026-11-07",
+      "location": "אילת"
+    },
+    {
+      "name": "כנס הקמת מתחמי דיור מוגן",
+      "event_date": "2026-11-04",
+      "location": "מרכז הבניה - נתניה"
+    },
+    {
+      "name": "הכנס לבניה ותשתיות - איגוד המהנדסים",
+      "event_date": "2026-10-28",
+      "event_end_date": "2026-10-29",
+      "location": "אקספו - גני התערוכה"
+    },
+    {
+      "name": "הכנס השנתי למיגון אש",
+      "event_date": "2026-11-03",
+      "location": "סלומלרש תל אביב"
+    },
+    {
+      "name": "הכנס לבניה ותשתיות",
+      "event_date": "2026-10-28",
+      "event_end_date": "2026-10-29",
+      "location": "אקספו גני התערוכה"
+    },
+    {
+      "name": "הכנס המקצועי של ענף השיפוצים בישראל",
+      "event_date": "2026-10-22",
+      "event_end_date": "2026-10-24",
+      "location": "ים המלח"
+    },
+    {
+      "name": "ארגון הקבלנים באר שבע",
+      "event_date": "2026-09-17",
+      "location": "מלון אוריינט ירושלים"
+    },
+    {
+      "name": "התאחדות הקבלנים 2026",
+      "event_date": "2026-06-24",
+      "event_end_date": "2026-06-27",
+      "location": "אילת"
+    },
+    {
+      "name": "הכנס הבינלאומי ה-11 לעיצוב ותכנון בתי מלון",
+      "event_date": "2026-05-31",
+      "location": ""
+    },
+    {
+      "name": "כנס מוסדות חינוך",
+      "event_date": "2026-05-28",
+      "location": ""
+    },
+    {
+      "name": "כנס מעטפת הבניין ה - 5",
+      "event_date": "2026-05-27",
+      "location": ""
+    }
+  ],
+  "Representative": [
+    {
+      "name": "אורי מרון",
+      "email": "rep1@example.com",
+      "role_title": "מנהל מחלקת אבקות",
+      "is_active": true,
+      "sort_order": 19
+    },
+    {
+      "name": "פיטר ברנשטיין",
+      "email": "rep2@example.com",
+      "role_title": "אבקות",
+      "is_active": true,
+      "sort_order": 16
+    },
+    {
+      "name": "ארז יוניוב",
+      "email": "rep3@example.com",
+      "role_title": "אבקות",
+      "is_active": true,
+      "sort_order": 15
+    },
+    {
+      "name": "משה עמר",
+      "email": "rep4@example.com",
+      "role_title": "אבקות",
+      "is_active": true,
+      "sort_order": 14
+    },
+    {
+      "name": "חן מליניאק",
+      "email": "rep5@example.com",
+      "role_title": "מנהלת מחלקת שיווק ודיגיטל",
+      "is_active": true,
+      "sort_order": 17
+    },
+    {
+      "name": "איברהים אבו שאח",
+      "email": "rep6@example.com",
+      "role_title": "מכירות",
+      "is_active": true,
+      "sort_order": 13
+    },
+    {
+      "name": "מאור קטן",
+      "email": "rep7@example.com",
+      "role_title": "מכירות",
+      "is_active": true,
+      "sort_order": 12
+    },
+    {
+      "name": "שלומי שבתאי",
+      "email": "rep8@example.com",
+      "role_title": "מכירות",
+      "is_active": true,
+      "sort_order": 11
+    },
+    {
+      "name": "אבי עקיבא",
+      "email": "rep9@example.com",
+      "role_title": "מכירות",
+      "is_active": true,
+      "sort_order": 10
+    },
+    {
+      "name": "גיא שמר",
+      "email": "rep10@example.com",
+      "role_title": "סמנכ\"ל מכירות",
+      "is_active": true,
+      "sort_order": 18
+    },
+    {
+      "name": "יגאל טלקר",
+      "email": "rep11@example.com",
+      "role_title": "מכירות",
+      "is_active": true,
+      "sort_order": 9
+    },
+    {
+      "name": "רותם המאירי",
+      "email": "rep12@example.com",
+      "role_title": "פיתוח לקוחות",
+      "is_active": true,
+      "sort_order": 7
+    },
+    {
+      "name": "קרן שי",
+      "email": "rep13@example.com",
+      "role_title": "שיווק",
+      "is_active": true,
+      "sort_order": 8
+    },
+    {
+      "name": "אלי יוסף",
+      "email": "rep14@example.com",
+      "role_title": "אדריכלים - ירושלים ודרום",
+      "is_active": true,
+      "sort_order": 4
+    },
+    {
+      "name": "יוגב כץ",
+      "email": "rep15@example.com",
+      "role_title": "פיתוח לקוחות",
+      "is_active": true,
+      "sort_order": 6
+    },
+    {
+      "name": "חגי קראדי",
+      "email": "rep16@example.com",
+      "role_title": "אדריכלים - צפון",
+      "is_active": true,
+      "sort_order": 2
+    },
+    {
+      "name": "ליאור שפירא",
+      "email": "rep17@example.com",
+      "role_title": "אדריכלים - מרכז",
+      "is_active": true,
+      "sort_order": 3
+    },
+    {
+      "name": "זאב פיינהולץ",
+      "email": "rep18@example.com",
+      "role_title": "יועץ טכני בכיר",
+      "is_active": true,
+      "sort_order": 1
+    },
+    {
+      "name": "בני כהן",
+      "email": "rep19@example.com",
+      "role_title": "פיתוח לקוחות",
+      "is_active": true,
+      "sort_order": 5
+    }
+  ],
+  "NotificationSettings": [
+    {
+      "label": "תפוצת התראות (סביבת פיתוח)",
+      "is_active": false,
+      "notification_emails": [
+        "dev-inbox@example.com"
+      ],
+      "reminder_days": 7
+    }
+  ],
+  "Lead": [
+    {
+      "full_name": "ישראל ישראלי",
+      "phone": "050-1111111",
+      "email": "israel@example.com",
+      "company": "אדריכלים בע\"מ",
+      "city": "תל אביב",
+      "role": "אדריכל",
+      "interests": [
+        "תקרות",
+        "לוחות"
+      ],
+      "event_name": "כנס תכנון המגדלים ומעטפת המבנה",
+      "lead_source": "כנס",
+      "status": "טרם טופל",
+      "assigned_to": "אורי מרון",
+      "assigned_email": "rep1@example.com",
+      "rep_notes": "ליד לדוגמה לסביבת הפיתוח"
+    },
+    {
+      "full_name": "דנה כהן",
+      "phone": "052-2222222",
+      "email": "dana@example.com",
+      "company": "קבלנות אחים",
+      "city": "חיפה",
+      "role": "קבלן",
+      "interests": [
+        "אקווה פאנל"
+      ],
+      "event_name": "כנס פסגת המגדלים והתכנון האורבני בישראל - בית ונוי",
+      "lead_source": "כנס",
+      "status": "טופל",
+      "is_quality": true,
+      "assigned_to": "פיטר ברנשטיין",
+      "assigned_email": "rep2@example.com"
+    },
+    {
+      "full_name": "אבי לוי",
+      "phone": "054-3333333",
+      "email": "avi@example.com",
+      "company": "יזמות נדל\"ן",
+      "city": "ירושלים",
+      "role": "יזם",
+      "interests": [
+        "בידוד",
+        "מרמוריט"
+      ],
+      "event_name": "כנס הנדל\"ן השנתי - ארגון הקבלנים והבונים מחוז תל אביב והמרכז באילת",
+      "lead_source": "כנס",
+      "status": "טרם טופל",
+      "assigned_to": "ארז יוניוב",
+      "assigned_email": "rep3@example.com"
+    },
+    {
+      "full_name": "מיכל ברק",
+      "phone": "053-4444444",
+      "email": "michal@example.com",
+      "company": "עיצוב פנים",
+      "city": "רעננה",
+      "role": "מעצב פנים",
+      "interests": [
+        "מוצרי גמר",
+        "קרניזים"
+      ],
+      "lead_source": "ידני",
+      "status": "טרם טופל",
+      "assigned_to": "אורי מרון",
+      "assigned_email": "rep1@example.com"
+    }
+  ]
+}

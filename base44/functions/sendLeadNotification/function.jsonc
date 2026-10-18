@@ -1,16 +1,4 @@
 {
   "name": "sendLeadNotification",
-  "entry": "entry.ts",
-  "automations": [
-    {
-      "type": "entity",
-      "description": "שולח מייל לכתובות שמוגדרות במסך ההגדרות בכל פעם שנשמר ליד חדש בכנס",
-      "entity_name": "Lead",
-      "event_types": [
-        "create"
-      ],
-      "is_active": false,
-      "name": "שליחת מייל על ליד חדש"
-    }
-  ]
+  "entry": "entry.ts"
 }
