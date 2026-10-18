@@ -31,3 +31,7 @@ dist-ssr
 .vite
 base44/.app.jsonc
 backups/
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
