@@ -85,5 +85,29 @@ check('delete מסיר את הרשומה', after.length === 0);
 const finalCount = (await db.Lead.list('-created_date', 500)).length;
 check('מספר הלידים חזר ל-55 אחרי הניקוי', finalCount === 55, `התקבלו ${finalCount}`);
 
+// --- הרשאות: מה שאורח (מפתח הדפדפן) יכול ולא יכול ------------------------------
+const anon = createDb(createClient(env('VITE_SUPABASE_URL'), env('VITE_SUPABASE_PUBLISHABLE_KEY'), {
+  auth: { persistSession: false },
+}));
+
+check('אורח קורא כנסים (הטופס צריך אותם)', (await anon.Event.list()).length === 13);
+check('אורח קורא נציגים', (await anon.Representative.list('sort_order', 100)).length === 19);
+check('אורח לא קורא לידים', (await anon.Lead.list('-created_date', 500)).length === 0);
+
+// הטופס בכנס חייב לעבוד בלי התחברות — וזה גם המסלול שבו insert...returning נחסם ע"י RLS
+const anonLead = await anon.Lead.create({
+  full_name: 'בדיקת הרשאות — למחיקה',
+  phone: '000-0000000',
+  assigned_email: 'nobody@example.com',
+  is_sample: true,
+});
+check('אורח יוצר ליד דרך הטופס', Boolean(anonLead?.full_name));
+
+const written = (await db.Lead.filter({ full_name: 'בדיקת הרשאות — למחיקה' })).at(0);
+check('הליד שנוצר אכן נשמר במסד', Boolean(written));
+if (written) await db.Lead.delete(written.id);
+
+check('אין כפילויות ומספר הלידים נשאר 55', (await db.Lead.list('-created_date', 500)).length === 55);
+
 console.log(failures === 0 ? '\nכל הבדיקות עברו.' : `\n${failures} בדיקות נכשלו.`);
 process.exit(failures === 0 ? 0 : 1);

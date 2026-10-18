@@ -71,7 +71,18 @@ function entity(client, table) {
     list: (sort, limit) => select({}, sort, limit),
     filter: (criteria, sort, limit) => select(criteria, sort, limit),
     get: async (id) => unwrap(await client.from(table).select('*').eq('id', id).single()),
-    create: async (data) => unwrap(await client.from(table).insert(data).select().single()),
+    create: async (data) => {
+      // ברירת המחדל מחזירה את השורה שנוצרה, כמו ב-Base44.
+      // אבל מבקר אנונימי בטופס הכנס רשאי *ליצור* ליד ולא לקרוא אותו, ו-RLS מפיל
+      // insert...returning במקרה כזה (42501). לכן נופלים חזרה להוספה בלי החזרה.
+      const { data: rows, error } = await client.from(table).insert(data).select();
+      if (!error) return rows?.[0] ?? data;
+      if (error.code !== '42501') throw new Error(error.message);
+
+      const { error: insertError } = await client.from(table).insert(data);
+      if (insertError) throw new Error(insertError.message);
+      return data;
+    },
     update: async (id, data) =>
       unwrap(await client.from(table).update(data).eq('id', id).select().single()),
     delete: async (id) => {

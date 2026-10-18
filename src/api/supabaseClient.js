@@ -9,3 +9,9 @@ if (!url || !key) {
 }
 
 export const supabase = createClient(url, key);
+
+// נוחות לפיתוח בלבד: מאפשר לבדוק התחברות והרשאות מתוך הקונסול של הדפדפן.
+// לא נכלל בבילד לייצור.
+if (import.meta.env.DEV) {
+  window.__supabase = supabase;
+}

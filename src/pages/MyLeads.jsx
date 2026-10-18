@@ -13,6 +13,8 @@ import { useLang } from '../hooks/useLang';
 import { translations } from '../lib/i18n';
 import LangToggle from '../components/LangToggle';
 import TransferLeadDialog from '../components/lead-form/TransferLeadDialog';
+import { useAuth } from '@/lib/AuthContext';
+import LoginCard from '@/components/auth/LoginCard';
 
 function RepSearchSelect({ reps, value, onChange, placeholder }) {
   const [open, setOpen] = useState(false);
@@ -78,7 +80,8 @@ function RepSearchSelect({ reps, value, onChange, placeholder }) {
   );
 }
 
-export default function MyLeads() {
+function MyLeadsContent() {
+  const { email, isAdmin } = useAuth();
   const [selectedRep, setSelectedRep] = useState('');
   const [selectedEvent, setSelectedEvent] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -93,12 +96,20 @@ export default function MyLeads() {
     queryFn: () => db.Representative.filter({ is_active: true }, 'sort_order', 100),
   });
 
+  // הנציג המחובר מזוהה לפי המייל שלו, ולא לפי בחירה מרשימה
+  const myRep = useMemo(
+    () => reps.find(r => (r.email || '').toLowerCase() === (email || '').toLowerCase()),
+    [reps, email],
+  );
+  const activeRep = isAdmin ? selectedRep : (myRep?.name || '');
+
   const { data: leads = [], isLoading } = useQuery({
-    queryKey: ['my-leads', selectedRep],
-    queryFn: () => selectedRep
-      ? db.Lead.filter({ assigned_to: selectedRep }, '-created_date', 500)
-      : Promise.resolve([]),
-    enabled: !!selectedRep,
+    queryKey: ['my-leads', activeRep, isAdmin, email],
+    // לנציג אין צורך לסנן לפי שם — ה-RLS בשרת כבר מחזיר רק את הלידים שמשויכים למייל שלו
+    queryFn: () => isAdmin
+      ? db.Lead.filter({ assigned_to: activeRep }, '-created_date', 500)
+      : db.Lead.list('-created_date', 500),
+    enabled: isAdmin ? !!activeRep : Boolean(myRep),
   });
 
   const availableEvents = useMemo(() => {
@@ -133,7 +144,7 @@ export default function MyLeads() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `leads_${selectedRep}_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.download = `leads_${activeRep}_${format(new Date(), 'yyyy-MM-dd')}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -167,14 +178,22 @@ export default function MyLeads() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">{t.selectYourName}</label>
-              <RepSearchSelect
-                reps={reps}
-                value={selectedRep}
-                onChange={v => { setSelectedRep(v); setSelectedEvent('all'); setFilterStatus('all'); setFilterQuality('all'); setFilterCrm('all'); }}
-                placeholder={t.selectRepPlaceholder}
-              />
+              {isAdmin ? (
+                <RepSearchSelect
+                  reps={reps}
+                  value={selectedRep}
+                  onChange={v => { setSelectedRep(v); setSelectedEvent('all'); setFilterStatus('all'); setFilterQuality('all'); setFilterCrm('all'); }}
+                  placeholder={t.selectRepPlaceholder}
+                />
+              ) : (
+                <div className="flex h-11 w-full items-center rounded-md border border-input bg-secondary/30 px-3 text-base" dir="rtl">
+                  <span className={myRep ? 'text-foreground font-semibold' : 'text-muted-foreground'}>
+                    {myRep ? myRep.name : email}
+                  </span>
+                </div>
+              )}
             </div>
-            {selectedRep && availableEvents.length > 0 && (
+            {activeRep && availableEvents.length > 0 && (
               <>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-foreground">{t.filterByEvent}</label>
@@ -233,7 +252,7 @@ export default function MyLeads() {
             )}
           </div>
 
-          {selectedRep && leads.length > 0 && (
+          {activeRep && leads.length > 0 && (
             <>
               <div className="flex gap-4 pt-2 border-t border-border text-sm text-muted-foreground flex-wrap">
                 <span>{t.totalLabel}: <strong className="text-foreground">{filtered.length}</strong></span>
@@ -250,7 +269,7 @@ export default function MyLeads() {
           )}
         </div>
 
-        {!selectedRep ? (
+        {!activeRep ? (
           <div className="text-center py-20 border border-dashed border-border rounded-2xl text-muted-foreground">
             {t.selectNamePrompt}
           </div>
@@ -265,7 +284,7 @@ export default function MyLeads() {
         ) : (
           <div className="space-y-3">
             {filtered.map(lead => (
-              <LeadCard key={lead.id} lead={lead} t={t} selectedRep={selectedRep} />
+              <LeadCard key={lead.id} lead={lead} t={t} selectedRep={activeRep} />
             ))}
           </div>
         )}
@@ -451,4 +470,22 @@ function LeadCard({ lead, t, selectedRep }) {
       </div>
     </div>
   );
+}
+
+export default function MyLeads() {
+  const { isAuthenticated, isLoadingAuth } = useAuth();
+
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginCard />;
+  }
+
+  return <MyLeadsContent />;
 }

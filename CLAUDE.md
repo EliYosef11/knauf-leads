@@ -147,3 +147,16 @@ node scripts/verify-supabase-import.mjs # השוואה שדה-שדה מול הג
 ```bash
 node scripts/test-db-adapter.mjs   # 16 בדיקות לשכבת הנתונים מול Supabase
 ```
+
+### התחברות והרשאות (אחרי שלב 2)
+Supabase Auth עם קוד חד-פעמי למייל. `src/api/auth.js` → `src/lib/AuthContext.jsx` →
+`LoginCard` / `AdminGuard`. האדמינים יושבים בטבלת `public.admins`, והבדיקה היא
+`is_admin()` בשרת — אף פעם לא בצד הלקוח.
+
+```bash
+node scripts/dev-login-code.mjs <email>   # קוד התחברות בלי לשלוח מייל (לפיתוח)
+```
+
+- `/my-leads` מזהה את הנציג לפי המייל המחובר; אדמין רואה שם את כל הנציגים.
+- `db.X.create()` נופל חזרה להוספה בלי `select()` כשה-RLS חוסם קריאה (כך הטופס הציבורי עובד).
+- בייצור צריך SMTP משלנו לפני שהנציגים מתחברים — השירות המובנה של Supabase מוגבל בקצב.
