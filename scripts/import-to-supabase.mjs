@@ -46,10 +46,16 @@ const backupPath =
 const data = JSON.parse(readFileSync(backupPath, 'utf8'));
 console.log(`מייבא מתוך ${backupPath}`);
 
-const meta = ['id', 'created_date', 'updated_date', 'created_by', 'created_by_id', 'is_sample'];
-const pick = (row, fields) => {
+// PostgREST דורש שכל האובייקטים בהכנסה מרובה יכילו בדיוק את אותם מפתחות, ולכן כל שורה
+// נבנית עם כל השדות. שדה חסר מקבל את ברירת המחדל שלו — null לעמודות שמרשות זאת,
+// והערך שהיה ב-Base44 לעמודות NOT NULL (למשל lead_source שמופיע רק בחלק מהלידים).
+const meta = { id: null, created_date: null, updated_date: null, created_by: null, created_by_id: null, is_sample: false };
+
+const pick = (row, defaults) => {
   const out = {};
-  for (const f of [...fields, ...meta]) if (row[f] !== undefined && row[f] !== null) out[f] = row[f];
+  for (const [f, fallback] of Object.entries({ ...defaults, ...meta })) {
+    out[f] = row[f] === undefined || row[f] === null ? fallback : row[f];
+  }
   return out;
 };
 
@@ -57,20 +63,25 @@ const eventIds = new Set((data.Event || []).map(e => e.id));
 const campaignIds = new Set((data.Campaign || []).map(c => c.id));
 
 const tables = [
-  ['events', (data.Event || []).map(r => pick(r, ['name', 'event_date', 'event_end_date', 'location', 'notes']))],
-  ['representatives', (data.Representative || []).map(r => pick(r, ['name', 'email', 'role_title', 'is_active', 'sort_order']))],
-  ['campaigns', (data.Campaign || []).map(r => pick(r, ['name', 'source', 'form_id', 'is_active', 'notes']))],
-  ['notification_settings', (data.NotificationSettings || []).map(r => pick(r, ['label', 'notification_emails', 'is_active', 'reminder_days']))],
+  ['events', (data.Event || []).map(r =>
+    pick(r, { name: null, event_date: null, event_end_date: null, location: null, notes: null }))],
+  ['representatives', (data.Representative || []).map(r =>
+    pick(r, { name: null, email: null, role_title: null, is_active: true, sort_order: null }))],
+  ['campaigns', (data.Campaign || []).map(r =>
+    pick(r, { name: null, source: null, form_id: null, is_active: null, notes: null }))],
+  ['notification_settings', (data.NotificationSettings || []).map(r =>
+    pick(r, { label: null, notification_emails: [], is_active: false, reminder_days: 7 }))],
   ['leads', (data.Lead || []).map(r => {
-    const row = pick(r, [
-      'full_name', 'phone', 'email', 'company', 'city', 'role', 'project_handling', 'interests',
-      'event_id', 'event_name', 'campaign_id', 'campaign_name', 'lead_source', 'rep_notes',
-      'assigned_to', 'assigned_email', 'lead_summary', 'is_quality', 'crm_entered', 'status',
-      'transfer_log', 'reminder_log',
-    ]);
-    // מפתח זר שאינו קיים בגיבוי — מנקים אותו ושומרים את השם הטקסטואלי
-    if (row.event_id && !eventIds.has(row.event_id)) delete row.event_id;
-    if (row.campaign_id && !campaignIds.has(row.campaign_id)) delete row.campaign_id;
+    const row = pick(r, {
+      full_name: null, phone: null, email: null, company: null, city: null, role: null,
+      project_handling: null, interests: [], event_id: null, event_name: null,
+      campaign_id: null, campaign_name: null, lead_source: 'כנס', rep_notes: null,
+      assigned_to: null, assigned_email: null, lead_summary: null, is_quality: false,
+      crm_entered: false, status: 'טרם טופל', transfer_log: [], reminder_log: [],
+    });
+    // מפתח זר שאינו קיים בגיבוי — מאפסים ושומרים את השם הטקסטואלי
+    if (row.event_id && !eventIds.has(row.event_id)) row.event_id = null;
+    if (row.campaign_id && !campaignIds.has(row.campaign_id)) row.campaign_id = null;
     return row;
   })],
 ];
