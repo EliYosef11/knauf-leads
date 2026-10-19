@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, ArrowLeftRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { invokeFunction } from '@/api/functions';
 import { db } from '@/api/db';
 
 export default function TransferLeadDialog({ lead, currentRep, open, onClose, onTransferred }) {
@@ -24,7 +24,7 @@ export default function TransferLeadDialog({ lead, currentRep, open, onClose, on
   const handleTransfer = async () => {
     if (!targetRep) return;
     setLoading(true);
-    await base44.functions.invoke('transferLead', {
+    await invokeFunction('transferLead', {
       lead_id: lead.id,
       from_rep: currentRep,
       to_rep: targetRep,

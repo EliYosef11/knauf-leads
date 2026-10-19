@@ -160,3 +160,22 @@ node scripts/dev-login-code.mjs <email>   # קוד התחברות בלי לשל�
 - `/my-leads` מזהה את הנציג לפי המייל המחובר; אדמין רואה שם את כל הנציגים.
 - `db.X.create()` נופל חזרה להוספה בלי `select()` כשה-RLS חוסם קריאה (כך הטופס הציבורי עובד).
 - בייצור צריך SMTP משלנו לפני שהנציגים מתחברים — השירות המובנה של Supabase מוגבל בקצב.
+
+## אחרי שלב 3 — המערכת כבר לא תלויה ב-Base44
+
+```bash
+npm run dev     # Vite רגיל. אין יותר צורך ב-npx base44 dev
+```
+
+- **פרויקט Supabase פעיל:** `knauf-leads-eu`, ref `eoaxsmjjthkktlhbuenl`, פרנקפורט.
+  (הפרויקט הישן בסידני עוד קיים וימחק בסוף ההגירה.)
+- `src/api/` — `db.js` (נתונים), `auth.js` (התחברות), `functions.js` (קריאה ל-Edge Functions).
+  תיקיית `base44/` היא ייחוס בלבד; שום קוד חי לא מייבא ממנה.
+- סקריפטים תפעוליים: `run-sql.mjs` (SQL דרך ה-Management API), `setup-webhook.mjs`
+  (טריגר + cron), `setup-auth-smtp.mjs` (מיילי התחברות), `dev-login-code.mjs` (קוד בלי מייל).
+- פונקציות נפרסות עם `npx supabase functions deploy <name> --project-ref eoaxsmjjthkktlhbuenl`;
+  `meta-webhook` דורשת בנוסף `--no-verify-jwt`.
+
+⚠️ **זהירות בבדיקות:** תפוצת ההתראות מכילה `keren.shay@knauf.com`, ו-`send-reminder-email`
+ללא פרמטרים שולח לכל הנציגים האמיתיים עם לידים פתוחים. לפני בדיקה — לכבות `is_active`
+בהגדרות, או לקרוא לפונקציה עם `lead_id` של ליד בדיקה בלבד.

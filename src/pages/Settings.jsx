@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { invokeFunction } from '@/api/functions';
 import { db } from '@/api/db';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,7 @@ function SettingsContent() {
   const sendRemindersNow = async () => {
     setSendingReminders(true);
     setRemindersSent(null);
-    const res = await base44.functions.invoke('sendReminderEmail', {});
+    const res = await invokeFunction('sendReminderEmail', {});
     setSendingReminders(false);
     setRemindersSent(res.data?.sent ?? 0);
     setTimeout(() => setRemindersSent(null), 5000);

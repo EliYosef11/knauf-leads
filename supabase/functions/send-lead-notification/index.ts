@@ -11,21 +11,25 @@
 import { serviceClient, notificationEmails, type Lead } from '../_shared/db.ts';
 import { sendMail } from '../_shared/mailer.ts';
 import { newLeadHtml } from '../_shared/templates/newLead.ts';
+import { preflight, json } from '../_shared/http.ts';
 
 Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
+
   try {
     const client = serviceClient();
     const body = await req.json().catch(() => ({}));
 
     // נתמך גם Database Webhook (record) וגם קריאה ידנית עם מזהה
     const leadId: string | undefined = body?.record?.id ?? body?.lead_id ?? body?.event?.entity_id;
-    if (!leadId) return Response.json({ error: 'Missing lead id' }, { status: 400 });
+    if (!leadId) return json({ error: 'Missing lead id' }, { status: 400 });
 
     const { data: lead } = await client.from('leads').select('*').eq('id', leadId).single<Lead>();
-    if (!lead) return Response.json({ error: 'Lead not found' }, { status: 404 });
+    if (!lead) return json({ error: 'Lead not found' }, { status: 404 });
 
     const mainTo = lead.assigned_email;
-    if (!mainTo) return Response.json({ ok: false, error: 'No assigned email for lead' }, { status: 400 });
+    if (!mainTo) return json({ ok: false, error: 'No assigned email for lead' }, { status: 400 });
 
     const ccList = (await notificationEmails(client)).filter((e) => e !== mainTo);
 
@@ -64,8 +68,8 @@ Deno.serve(async (req) => {
       html: newLeadHtml(lead, tableRows),
     });
 
-    return Response.json({ ok: true, to: mainTo, cc: ccList });
+    return json({ ok: true, to: mainTo, cc: ccList });
   } catch (error) {
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return json({ error: (error as Error).message }, { status: 500 });
   }
 });

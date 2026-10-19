@@ -7,18 +7,22 @@
 import { serviceClient, type Lead } from '../_shared/db.ts';
 import { sendMail } from '../_shared/mailer.ts';
 import { transferHtml } from '../_shared/templates/transfer.ts';
+import { preflight, json } from '../_shared/http.ts';
 
 Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
+
   try {
     const client = serviceClient();
     const { lead_id, from_rep, to_rep, to_email, reason } = await req.json().catch(() => ({}));
 
     if (!lead_id || !from_rep || !to_rep) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+      return json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const { data: lead } = await client.from('leads').select('*').eq('id', lead_id).single<Lead>();
-    if (!lead) return Response.json({ error: 'Lead not found' }, { status: 404 });
+    if (!lead) return json({ error: 'Lead not found' }, { status: 404 });
 
     const existingLog = Array.isArray(lead.transfer_log) ? lead.transfer_log : [];
     const updatedLog = [...existingLog, {
@@ -53,8 +57,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    return Response.json({ ok: true });
+    return json({ ok: true });
   } catch (error) {
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return json({ error: (error as Error).message }, { status: 500 });
   }
 });

@@ -8,6 +8,7 @@
 
 import { sendMail } from '../_shared/mailer.ts';
 import { eventReportHtml } from '../_shared/templates/eventReport.ts';
+import { preflight, json } from '../_shared/http.ts';
 
 interface ExportLead {
   full_name?: string;
@@ -22,11 +23,14 @@ interface ExportLead {
 }
 
 Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
+
   try {
     const { eventName, email, leads } = await req.json().catch(() => ({}));
 
     if (!eventName || !email || !leads?.length) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+      return json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const rows = (leads as ExportLead[]).map((l) => `
@@ -49,8 +53,8 @@ Deno.serve(async (req) => {
       html: eventReportHtml(eventName, leads, rows),
     });
 
-    return Response.json({ success: true });
+    return json({ success: true });
   } catch (error) {
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return json({ error: (error as Error).message }, { status: 500 });
   }
 });

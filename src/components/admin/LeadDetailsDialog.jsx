@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Check, X, Loader2, Star, CheckCircle2, Clock, Trash2, Bell } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { invokeFunction } from '@/api/functions';
 import { db } from '@/api/db';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import InterestSelector from '../lead-form/InterestSelector';
@@ -68,7 +68,7 @@ export default function LeadDetailsDialog({ lead, onClose, t = {} }) {
   const handleSendReminder = async () => {
     setIsSendingReminder(true);
     try {
-      await base44.functions.invoke('sendReminderEmail', { lead_id: lead.id });
+      await invokeFunction('sendReminderEmail', { lead_id: lead.id });
       setReminderSent(true);
       setTimeout(() => setReminderSent(false), 3000);
     } finally {

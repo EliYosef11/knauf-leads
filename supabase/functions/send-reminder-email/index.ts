@@ -10,6 +10,7 @@
 import { serviceClient, type Lead } from '../_shared/db.ts';
 import { sendMail } from '../_shared/mailer.ts';
 import { reminderHtml } from '../_shared/templates/reminder.ts';
+import { preflight, json } from '../_shared/http.ts';
 
 const interestsOf = (lead: Lead) =>
   Array.isArray(lead.interests) && lead.interests.length ? lead.interests.join(', ') : '&mdash;';
@@ -17,6 +18,9 @@ const interestsOf = (lead: Lead) =>
 const asTemplateLead = (lead: Lead) => lead as unknown as Record<string, string | undefined>;
 
 Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
+
   try {
     const client = serviceClient();
     const body = await req.json().catch(() => ({}));
@@ -32,8 +36,8 @@ Deno.serve(async (req) => {
     // תזכורת ידנית
     if (body?.lead_id) {
       const { data: lead } = await client.from('leads').select('*').eq('id', body.lead_id).single<Lead>();
-      if (!lead) return Response.json({ error: 'Lead not found' }, { status: 404 });
-      if (!lead.assigned_email) return Response.json({ ok: false, reason: 'no assigned_email' });
+      if (!lead) return json({ error: 'Lead not found' }, { status: 404 });
+      if (!lead.assigned_email) return json({ ok: false, reason: 'no assigned_email' });
 
       await sendMail({
         to: lead.assigned_email,
@@ -41,7 +45,7 @@ Deno.serve(async (req) => {
         html: reminderHtml(asTemplateLead(lead), '?', interestsOf(lead)),
       });
       await logReminder(lead, 'manual');
-      return Response.json({ ok: true });
+      return json({ ok: true });
     }
 
     // ריצה מתוזמנת
@@ -59,7 +63,7 @@ Deno.serve(async (req) => {
       return new Date(lead.created_date ?? 0).getTime() < cutoff;
     });
 
-    if (overdue.length === 0) return Response.json({ ok: true, sent: 0 });
+    if (overdue.length === 0) return json({ ok: true, sent: 0 });
 
     const results: { to: string; lead?: string; ok: boolean; error?: string }[] = [];
 
@@ -78,8 +82,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    return Response.json({ ok: true, sent: results.filter((r) => r.ok).length, results });
+    return json({ ok: true, sent: results.filter((r) => r.ok).length, results });
   } catch (error) {
-    return Response.json({ error: (error as Error).message }, { status: 500 });
+    return json({ error: (error as Error).message }, { status: 500 });
   }
 });
