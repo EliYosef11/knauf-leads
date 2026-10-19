@@ -1,181 +1,107 @@
 # Knauf Leads — מערכת לידים לכנסים
 
 אפליקציית React/Vite בעברית (RTL) לאיסוף לידים בכנסים עבור קנאוף ישראל.
-נבנתה במקור ב-Base44 Builder, והוצאה לקוד מקומי ב-18.10.2026 באמצעות `base44 eject`.
+נבנתה במקור ב-Base44 Builder, הוצאה לקוד מקומי ב-18.10.2026, והועברה ל-Supabase ב-19.10.2026.
 
-## סטטוס ומבנה הפריסה
+## איפה הדברים עומדים
 
-| מה | איפה |
+| | |
 |---|---|
-| אתר חי (production) | https://knauf-il-leads.com — מוגש מאפליקציית Base44 המקורית |
-| App ID מקורי (production, עם הנתונים האמיתיים) | `6a15a08fdeebfd8254f3814d` |
-| App ID של העותק לפיתוח (נוצר ע"י eject, DB ריק) | `6ad47fcc77c4c459a5387e96` — נמצא ב-`.env.local` ו-`base44/.app.jsonc` |
+| אתר חי (production) | https://knauf-il-leads.com — **עדיין מוגש מ-Base44**, עם הקוד הישן |
+| הקוד כאן | רץ במלואו על Supabase, בלי שום תלות ב-Base44 |
+| Supabase | `knauf-leads-eu`, ref `eoaxsmjjthkktlhbuenl`, פרנקפורט (eu-central-1) |
+| נשאר לעשות | שלב 4 (פריסה והעברת הדומיין) ושלב 5 (סגירת Base44) — ראה [MIGRATION.md](MIGRATION.md) |
 
-⚠️ **הקוד המקומי מחובר לעותק, לא ל-production.** כל פיתוח כאן לא נוגע בלידים האמיתיים.
-לפני כל מעבר/סנכרון לכיוון production — לגבות נתונים קודם.
+פרויקט Supabase ישן בסידני (`jiuyfjhvyixgysmknpuf`) עדיין קיים ויימחק בסוף ההגירה;
+אפליקציית Base44 המקורית (`6a15a08fdeebfd8254f3814d`) היא זו שמשרתת את האתר החי.
 
 ## הרצה מקומית
 
 ```bash
-npx base44 dev     # בקאנד מקומי על 4400 + Vite על 5173, פרוקסי /api → localhost:4400
-npm run seed       # בטרמינל שני — מזריע נתוני דמו
+npm run dev      # Vite על 5173, מדבר ישירות עם Supabase
 ```
 
-`npm run dev` לבדו **לא מספיק** — כל קריאות ה-API יחזירו 404 בלי הבקאנד המקומי.
-
-**ה-DB המקומי יושב בזיכרון ונמחק בכל הפעלה מחדש של `base44 dev`.**
-לכן יש `npm run seed` (`scripts/seed-dev.mjs` + `scripts/seed-data.json`) שמזריע 13 כנסים,
-19 נציגים, הגדרות התראות ו-4 לידים לדוגמה. הסקריפט אידמפוטנטי — מדלג על ישות שכבר מאוכלסת.
-שמות הנציגים אמיתיים אך **כתובות המייל שלהם הוחלפו בכתובות בדיקה** (`example.com`) כדי שבדיקה
-מקומית לא תשלח מייל לנציג אמיתי. הלידים ב-seed מומצאים — אין בקוד נתונים אישיים אמיתיים.
-
-### מגבלה: backend functions לא רצות על המק הזה
-Deno מותקן (`~/.deno/bin/deno`, צריך להיות ב-PATH לפני `base44 dev`), אבל ריצת הפונקציות
-המקומית משתמשת ב-`workerd` שדורש macOS 13+. על macOS 12.7.6 כאן זה נכשל:
-`dyld: Symbol not found ... workerd` → הפונקציה מחזירה `write EPIPE` / 500.
-**לכן בדיקת פונקציות נעשית מול אפליקציית העותק ב-Base44** (`npx base44 functions deploy <name>`),
-לא מקומית. שאר הפיתוח (UI, entities, זרימות נתונים) עובד מקומית ללא בעיה.
-
-### גיבויים
-`backups/prod-export-YYYY-MM-DD.json` — ייצוא מלא של הנתונים מפרודקשן (ב-18.10.2026: 55 לידים,
-13 כנסים, 19 נציגים, הגדרות). התיקייה ב-`.gitignore` כי יש בה פרטים אישיים של לידים אמיתיים.
-לייצוא מחודש:
-
-```bash
-export PATH="$HOME/.deno/bin:$PATH"
-npx base44 exec --app-id 6a15a08fdeebfd8254f3814d < script.ts   # script.ts מדפיס JSON
-```
+אין יותר בקאנד מקומי ואין `base44 dev`. `.env.local` (מחוץ ל-git) מחזיק את
+`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, ואת הסודות של הסקריפטים:
+`SUPABASE_SECRET_KEY`, `SUPABASE_ACCESS_TOKEN`, `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`.
 
 ## ארכיטקטורה
 
-- **Frontend**: React 18 + Vite + Tailwind + shadcn/ui (`src/components/ui/*` — קוד ספרייה, לא לערוך סתם) + framer-motion + react-router + TanStack Query.
-- **Backend**: Base44 — entities (DB), auth, backend functions (Deno), connectors, workflows.
-- **SDK**: `@base44/sdk` דרך `src/api/base44Client.js`; `serverUrl: ''` כלומר קריאות יחסיות ל-`/api`.
+- **Frontend**: React 18 + Vite + Tailwind + shadcn/ui (`src/components/ui/*` — קוד ספרייה,
+  לא לערוך סתם) + framer-motion + react-router + TanStack Query.
+- **Backend**: Supabase — Postgres עם RLS, Auth, ו-Edge Functions ב-Deno.
+- `src/api/db.js` — נתונים. חושף את אותו ממשק שהיה ל-`base44.entities.X`
+  (`list` / `filter` / `get` / `create` / `update` / `delete`); הלוגיקה ב-`dbFactory.js`
+  מקבלת לקוח בהזרקה כדי שאפשר יהיה לבדוק אותה מ-Node.
+- `src/api/auth.js` + `src/lib/AuthContext.jsx` — התחברות בקוד חד-פעמי למייל.
+- `src/api/functions.js` — קריאה ל-Edge Functions, עם מיפוי מהשמות הישנים.
+- `base44/` — **עותק ייחוס בלבד** של המקור. שום קוד חי לא מייבא ממנה.
 
-### Entities (`base44/entities/`)
-`Lead`, `Event`, `Representative`, `Campaign`, `NotificationSettings`, `User`.
-שדות ה-Lead בעברית (role, interests, status הם enums בעברית — לא לשנות ערכים בלי מיגרציית נתונים).
+### טבלאות
+`leads`, `events`, `representatives`, `campaigns`, `notification_settings`, `admins`.
+המזהים הם ה-ids המקוריים של Base44 (text), כך ש-`leads.event_id` ממשיך להצביע נכון.
+שדות ה-enum בעברית הם text חופשי — הנתונים האמיתיים מכילים ערכים שלא היו בסכמה
+של Base44 (`אדריכל/ית` מול `אדריכל`), ו-CHECK היה מפיל את הייבוא.
 
-### Pages (`src/pages/`)
-| נתיב | קומפוננטה | תיאור |
+### מסכים (`src/pages/`)
+| נתיב | מי נכנס | תיאור |
 |---|---|---|
-| `/` | LeadForm | טופס הליד הציבורי (mobile-first), משויך אוטומטית לכנס לפי תאריך |
-| `/my-leads` | MyLeads | הלידים של הנציג המחובר |
-| `/admin` | AdminDashboard | לוח ניהול + טבלת לידים + ייצוא |
-| `/events` | EventsManager | ניהול כנסים |
-| `/representatives` | RepresentativesManager | ניהול נציגים |
-| `/campaigns` | CampaignsManager | קמפיינים (לידים מ-Meta) |
-| `/settings` | Settings | כתובות תפוצה להתראות (NotificationSettings) |
+| `/` | כולם, ללא התחברות | טופס הליד בכנס (mobile-first) |
+| `/my-leads` | נציג מחובר | הלידים שלו בלבד; אדמין רואה רשימת נציגים לבחירה |
+| `/admin` | אדמין | לוח ניהול, טבלת לידים, ייצוא |
+| `/events` `/representatives` `/campaigns` `/settings` | אדמין | ניהול |
 
-### Backend functions (`base44/functions/`)
+### הרשאות (RLS) — [supabase/policies.sql](supabase/policies.sql)
+- אורח: קורא `events` ו-`representatives` (הטופס צריך אותם), יוצר `leads`. **לא קורא לידים.**
+- נציג מחובר: קורא ומעדכן רק לידים שה-`assigned_email` שלהם שווה למייל שלו.
+- אדמין (שורה ב-`public.admins`): הכל. הבדיקה היא `is_admin()` בשרת, לעולם לא בצד הלקוח.
+
+`db.X.create()` נופל חזרה להוספה בלי `select()` כש-RLS חוסם קריאה — בלי זה שליחת הטופס
+הציבורי נשברת עם שגיאה `42501`.
+
+### פונקציות (`supabase/functions/`)
 | פונקציה | תפקיד |
 |---|---|
-| `sendLeadNotification` | **הליבה**: על כל יצירת Lead שולחת מייל HTML בעברית לנציג המשויך (`assigned_email`) + CC לכתובות מ-NotificationSettings |
-| `sendReminderEmail` | תזכורת יומית (cron `0 6 * * *`) על לידים שטרם טופלו 7 ימים |
-| `transferLead` | העברת ליד בין נציגים + מייל ליידוע |
-| `exportEventEmail` | שליחת טבלת לידים של כנס למייל |
-| `sendTestEmail` | בדיקת חיבור Gmail ממסך ההגדרות |
-| `metaWebhook` | קליטת לידים מ-Meta Lead Ads (verify token: `META_VERIFY_TOKEN`, ברירת מחדל `knauf-meta-webhook`) |
+| `send-lead-notification` | **הליבה** — טריגר על INSERT ל-`leads` שולח מייל לנציג + CC לתפוצה |
+| `send-reminder-email` | `{lead_id}` לתזכורת ידנית, או ריק לריצת ה-cron היומית |
+| `transfer-lead` | העברת ליד בין נציגים + מייל יידוע |
+| `export-event-email` | דוח לידים של כנס למייל |
+| `send-test-email` | בדיקת חיבור המייל ממסך ההגדרות |
+| `meta-webhook` | לידים מ-Meta Lead Ads. **ציבורית** (`--no-verify-jwt`) |
 
-### שליחת מיילים — התלות המרכזית ב-Base44
-כל המיילים נשלחים דרך **Gmail API** עם OAuth connector של Base44 (`base44/connectors/gmail.jsonc`, scope `gmail.send`):
+תבניות ה-HTML ב-`_shared/templates/` הועתקו תו-בתו מ-Base44 — לא לשכתב אותן בלי סיבה,
+הנציגים רגילים למייל הזה.
 
-```js
-const { accessToken } = await base44.asServiceRole.connectors.getConnection('gmail');
-// POST https://gmail.googleapis.com/gmail/v1/users/me/messages/send
-```
+### מיילים, טריגרים ותזמון
+הכל יוצא מ-`knauf.il.leads@gmail.com` דרך SMTP עם סיסמת אפליקציה (`_shared/mailer.ts`),
+כולל קודי ההתחברות של Supabase Auth. הטריגר על `leads` והתזכורת היומית (06:00 UTC)
+מוגדרים ב-`scripts/setup-webhook.mjs` ומשתמשים ב-pg_net ו-pg_cron; מפתח השירות יושב
+בטבלה בסכמה `private` שאינה חשופה ב-API.
 
-ה-refresh token של חשבון ה-Gmail הייעודי מוחזק אצל Base44. בהגירה מלאה החוצה צריך להחליף את זה
-ב-Google OAuth client עצמאי, או ב-SMTP/Resend.
-
-### Workflows (`base44/workflows/`)
-שני workflows מהגרים מ-automations ישנים: טריגר על יצירת Lead → `sendLeadNotification`,
-ו-cron יומי → `sendReminderEmail`. באפליקציית העותק הן נכשלו ב-deploy
-(`409 workflows_enabled` — האפליקציה החדשה משתמשת ב-Workflows ולכן automations ישנים חסומים).
-הגדרות ה-`automations` שנשארו בתוך `function.jsonc` הן שאריות legacy עם `is_active: false`.
-
-## מצב האבטחה
-
-**תוקן בקוד, טרם נפרס (18.10.2026):** `AdminGuard` עבר לאימות אמיתי מול Base44 —
-לא מחובר מקבל כפתור התחברות, מחובר ללא `role === 'admin'` מקבל "אין הרשאת גישה".
-שער הסיסמה הקשיחה וה-`sessionStorage.admin_unlocked` הוסרו.
-בפרודקשן `elicomusic@gmail.com` הוא היחיד הרשום ובעל `role: admin`, כך שהוא ייכנס כרגיל;
-כל אדמין נוסף צריך משתמש עם `role: admin` בדשבורד של Base44.
-
-⚠️ **האתר החי עדיין מריץ את הגרסה הישנה** — ההחלטה (18.10.2026) הייתה לא לפרוס עד שיהיה
-תיקון שלם. כלומר הסיסמה החשופה בבאנדל עדיין פעילה בפרודקשן.
-
-**פתוח במכוון (החלטת המשתמש, 18.10.2026):**
-`/my-leads` ללא שום הגנה — בוחרים נציג מרשימה ורואים את כל הלידים שלו (שם, טלפון, מייל, הערות),
-ואפשר לעבור בין כל הנציגים. בנוסף אין RLS על אף entity (אין מפתח `rls` בקבצי `base44/entities/`)
-ו-`requiresAuth: false` ב-`src/api/base44Client.js`, כך שהנתונים נגישים גם ישירות דרך ה-API.
-
-הסיבה המבנית: המערכת תוכננה ללא התחברות לנציגים, ולכן השרת לא יודע מי מולו ואי אפשר להגדיר
-RLS בלי לשבור את מסך הנציגים. הפתרון המוצע כשיוחלט: חשבונות Google לנציגים, ואז
-`"read": { "$or": [ { "user_condition": { "role": "admin" } }, { "assigned_email": "{{user.email}}" } ] }`
-על entity `Lead`, עם `"create": true` כדי שהטופס הציבורי ימשיך לעבוד.
-
-## כללי עבודה בפרויקט
-
-- **לשמור על העיצוב 1:1** מול האתר החי. אומת ב-18.10.2026: הרנדור המקומי זהה לפרודקשן.
-- הטופס והמסכים RTL בעברית; טקסטים דו-לשוניים ב-`src/lib/i18n.js` (יש כפתור EN).
-- לא לשנות ערכי enum בעברית ב-entities בלי לחשוב על נתונים קיימים.
-- `src/components/ui/` זה shadcn — לשנות רק בכוונה.
-
-## Supabase (יעד ההגירה)
-
-פרויקט `Knauf-il-leads`, ref `jiuyfjhvyixgysmknpuf`. שלב 0 הושלם 18.10.2026 — הסכמה והנתונים
-כבר שם (13 כנסים, 19 נציגים, 55 לידים, הגדרות התראות), מאומתים שדה-שדה מול הגיבוי.
+## סקריפטים
 
 ```bash
-node scripts/import-to-supabase.mjs    # ייבוא/סנכרון מהגיבוי (upsert לפי id)
-node scripts/verify-supabase-import.mjs # השוואה שדה-שדה מול הגיבוי
+npm run functions:deploy              # פריסת כל הפונקציות (meta-webhook אוטומטית ציבורית)
+node scripts/run-sql.mjs <file.sql>   # הרצת SQL דרך ה-Management API
+node scripts/setup-webhook.mjs        # טריגר ליד חדש + cron יומי
+node scripts/setup-auth-smtp.mjs      # מיילי ההתחברות דרך Gmail
+node scripts/import-to-supabase.mjs   # ייבוא/סנכרון מהגיבוי (upsert לפי id)
+node scripts/verify-supabase-import.mjs  # השוואה שדה-שדה מול הגיבוי
+node scripts/test-db-adapter.mjs      # 22 בדיקות לשכבת הנתונים ולהרשאות
+node scripts/dev-login-code.mjs <email>  # קוד התחברות בלי לשלוח מייל
+deno run --allow-env --allow-read --allow-net scripts/send-test-mail.ts  # בדיקת שליחה
 ```
 
-- RLS דלוק על כל הטבלאות **בלי מדיניות** — כלומר `VITE_SUPABASE_PUBLISHABLE_KEY` לא קורא ולא
-  כותב כלום. זה מכוון: המדיניות תיכתב בשלב 2 יחד עם ההתחברות. סקריפטים משתמשים ב-
-  `SUPABASE_SECRET_KEY` שעוקף RLS.
-- PostgREST דורש שכל האובייקטים בהכנסה מרובה יישאו בדיוק את אותם מפתחות — לכן `pick()`
-  בסקריפט הייבוא ממלא כל שדה חסר בברירת מחדל ולא משמיט אותו.
-- התוכנית המלאה והשלבים הבאים: [MIGRATION.md](MIGRATION.md).
+`backups/prod-export-YYYY-MM-DD.json` — ייצוא מלא מהפרודקשן של Base44 (55 לידים, 13 כנסים,
+19 נציגים). התיקייה ב-`.gitignore` כי יש בה פרטים אישיים.
 
-### שכבת הנתונים (אחרי שלב 1)
-קוד המסכים קורא ל-`db.X` מ-[src/api/db.js](src/api/db.js) — אותו ממשק שהיה ל-`base44.entities.X`,
-מעל Supabase. הלוגיקה ב-`src/api/dbFactory.js` (מקבלת לקוח בהזרקה, ולכן ניתנת לבדיקה מ-Node).
-`npx base44 dev` עדיין נדרש להרצה מקומית — ההתחברות והפונקציות עדיין על Base44.
+## כללים ואזהרות
 
-```bash
-node scripts/test-db-adapter.mjs   # 16 בדיקות לשכבת הנתונים מול Supabase
-```
-
-### התחברות והרשאות (אחרי שלב 2)
-Supabase Auth עם קוד חד-פעמי למייל. `src/api/auth.js` → `src/lib/AuthContext.jsx` →
-`LoginCard` / `AdminGuard`. האדמינים יושבים בטבלת `public.admins`, והבדיקה היא
-`is_admin()` בשרת — אף פעם לא בצד הלקוח.
-
-```bash
-node scripts/dev-login-code.mjs <email>   # קוד התחברות בלי לשלוח מייל (לפיתוח)
-```
-
-- `/my-leads` מזהה את הנציג לפי המייל המחובר; אדמין רואה שם את כל הנציגים.
-- `db.X.create()` נופל חזרה להוספה בלי `select()` כשה-RLS חוסם קריאה (כך הטופס הציבורי עובד).
-- בייצור צריך SMTP משלנו לפני שהנציגים מתחברים — השירות המובנה של Supabase מוגבל בקצב.
-
-## אחרי שלב 3 — המערכת כבר לא תלויה ב-Base44
-
-```bash
-npm run dev     # Vite רגיל. אין יותר צורך ב-npx base44 dev
-```
-
-- **פרויקט Supabase פעיל:** `knauf-leads-eu`, ref `eoaxsmjjthkktlhbuenl`, פרנקפורט.
-  (הפרויקט הישן בסידני עוד קיים וימחק בסוף ההגירה.)
-- `src/api/` — `db.js` (נתונים), `auth.js` (התחברות), `functions.js` (קריאה ל-Edge Functions).
-  תיקיית `base44/` היא ייחוס בלבד; שום קוד חי לא מייבא ממנה.
-- סקריפטים תפעוליים: `run-sql.mjs` (SQL דרך ה-Management API), `setup-webhook.mjs`
-  (טריגר + cron), `setup-auth-smtp.mjs` (מיילי התחברות), `dev-login-code.mjs` (קוד בלי מייל).
-- פונקציות נפרסות עם `npx supabase functions deploy <name> --project-ref eoaxsmjjthkktlhbuenl`;
-  `meta-webhook` דורשת בנוסף `--no-verify-jwt`.
-
-⚠️ **זהירות בבדיקות:** תפוצת ההתראות מכילה `keren.shay@knauf.com`, ו-`send-reminder-email`
-ללא פרמטרים שולח לכל הנציגים האמיתיים עם לידים פתוחים. לפני בדיקה — לכבות `is_active`
-בהגדרות, או לקרוא לפונקציה עם `lead_id` של ליד בדיקה בלבד.
+- **לשמור על העיצוב 1:1** מול האתר החי. אומת ב-18.10.2026 ואחרי כל שלב מאז.
+- ⚠️ `send-reminder-email` ללא פרמטרים שולח לכל הנציגים האמיתיים עם לידים פתוחים,
+  ותפוצת ההתראות כוללת את `keren.shay@knauf.com`. לפני בדיקה — לכבות `is_active`
+  ב-`notification_settings` ולהחזיר אחרי, או לקרוא עם `lead_id` של ליד בדיקה.
+- `reminder_days` בפרודקשן הוא 2, לא 7 כפי שכתוב בקוד הישן.
+- לידים מ-Meta משויכים אוטומטית לקרן שי, ומיפוי התפקידים שם משתמש בערכים הישנים
+  (`קבלן` ולא `קבלן/ית`) — פער ידוע שלא יושר בכוונה.
+- טקסטים דו-לשוניים ב-`src/lib/i18n.js` (יש כפתור EN בממשק).
