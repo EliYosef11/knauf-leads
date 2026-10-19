@@ -85,12 +85,15 @@ export default function LeadForm() {
       await db.Lead.create({
         ...form,
         event_name: currentEvent?.name || 'ליד כללי',
-        event_id: currentEvent?.id || '',
-        assigned_email: assignedRep?.email || ''
+        // null ולא מחרוזת ריקה: event_id הוא מפתח זר לטבלת הכנסים, ומחרוזת ריקה
+        // אינה מזהה קיים ולכן Postgres דוחה את השורה (ב-Base44 לא היו אילוצים כאלה)
+        event_id: currentEvent?.id || null,
+        assigned_email: assignedRep?.email || null
       });
       setSuccess(true);
     } catch (err) {
-      setError(t.errorGeneral);
+      // מציגים גם את הסיבה הטכנית — בלעדיה תקלה בכנס נראית כמו "נסה שוב" אינסופי
+      setError(`${t.errorGeneral} (${err.message})`);
       setSubmitting(false);
     }
   };
