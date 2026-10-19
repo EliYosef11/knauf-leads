@@ -60,8 +60,8 @@ export default function LoginCard({ title, subtitle }) {
     try {
       await sendCode(email);
       setCodeSent(true);
-    } catch {
-      setError(t.errorSend);
+    } catch (sendError) {
+      setError(sendError.message || t.errorSend);
     } finally {
       setBusy(false);
     }
@@ -73,8 +73,8 @@ export default function LoginCard({ title, subtitle }) {
     setError('');
     try {
       await verifyCode(email, code);
-    } catch {
-      setError(t.errorVerify);
+    } catch (verifyError) {
+      setError(verifyError.message || t.errorVerify);
     } finally {
       setBusy(false);
     }
