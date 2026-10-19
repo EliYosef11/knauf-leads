@@ -16,6 +16,7 @@ import KnaufLogo from '../components/lead-form/KnaufLogo';
 import { useLang } from '../hooks/useLang';
 import { translations } from '../lib/i18n';
 import LangToggle from '../components/LangToggle';
+import UserBadge from '@/components/auth/UserBadge';
 
 export default function AdminDashboard() {
   return (
@@ -217,6 +218,7 @@ function DashboardContent() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <UserBadge />
             <LangToggle lang={lang} onToggle={toggle} />
             <Link to="/">
               <Button variant="ghost" size="sm" className="gap-1.5 text-white hover:bg-white/10">

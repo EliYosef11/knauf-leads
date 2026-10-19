@@ -16,6 +16,7 @@ import SuccessOverlay from '../components/lead-form/SuccessOverlay';
 import { translations } from '../lib/i18n';
 import { useLang } from '../hooks/useLang';
 import LangToggle from '../components/LangToggle';
+import UserBadge from '@/components/auth/UserBadge';
 
 const EMPTY = {
   full_name: '',
@@ -122,7 +123,8 @@ export default function LeadForm() {
           <Lock className="w-4 h-4" />
           <span>{t.adminLink}</span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <UserBadge />
           {/* Language switcher */}
           <LangToggle lang={lang} onToggle={handleLangChange} />
           <Link

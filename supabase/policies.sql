@@ -84,3 +84,68 @@ create policy admin_campaigns on public.campaigns
 
 create policy admin_settings on public.notification_settings
   for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+-- ============================================================
+-- 19.10.2026 — התחברות רק לנציגים רשומים, וניהול אדמינים מהממשק
+-- ============================================================
+
+-- השוואות מייל חסינות לאותיות גדולות/קטנות. בטבלת הנציגים יש כתובת שנשמרה
+-- כ-Hagay.karadi@... בעוד שההתחברות מנרמלת לאותיות קטנות — בלי lower() הנציג
+-- הזה היה מתחבר ולא רואה אף ליד.
+drop policy if exists read_own_or_admin_leads   on public.leads;
+drop policy if exists update_own_or_admin_leads on public.leads;
+
+create policy read_own_or_admin_leads on public.leads
+  for select to authenticated
+  using (public.is_admin() or lower(assigned_email) = lower(public.current_email()));
+
+create policy update_own_or_admin_leads on public.leads
+  for update to authenticated
+  using (public.is_admin() or lower(assigned_email) = lower(public.current_email()))
+  with check (public.is_admin() or lower(assigned_email) = lower(public.current_email()));
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.admins a
+    where lower(a.email) = lower(auth.jwt() ->> 'email')
+  );
+$$;
+
+-- מי רשאי בכלל לבקש קוד כניסה: נציג פעיל או אדמין. נקראת לפני שליחת הקוד.
+create or replace function public.can_login(p_email text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.representatives r
+    where lower(r.email) = lower(p_email) and r.is_active
+  ) or exists (
+    select 1 from public.admins a where lower(a.email) = lower(p_email)
+  );
+$$;
+
+grant execute on function public.can_login(text) to anon, authenticated;
+
+-- ניהול האדמינים ממסך ההגדרות
+drop policy if exists admins_read  on public.admins;
+drop policy if exists admins_write on public.admins;
+
+create policy admins_read on public.admins
+  for select to authenticated using (public.is_admin());
+
+create policy admins_write on public.admins
+  for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
+insert into public.admins (email) values
+  ('eli.yosef@knauf.com'),
+  ('keren.shay@knauf.com')
+on conflict do nothing;

@@ -15,6 +15,7 @@ import LangToggle from '../components/LangToggle';
 import TransferLeadDialog from '../components/lead-form/TransferLeadDialog';
 import { useAuth } from '@/lib/AuthContext';
 import LoginCard from '@/components/auth/LoginCard';
+import UserBadge from '@/components/auth/UserBadge';
 
 function RepSearchSelect({ reps, value, onChange, placeholder }) {
   const [open, setOpen] = useState(false);
@@ -162,6 +163,7 @@ function MyLeadsContent() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <UserBadge />
             <LangToggle lang={lang} onToggle={toggle} />
             <Link to="/">
               <Button variant="outline" size="sm" className="gap-1.5 text-white border-white/30 hover:bg-white/10">

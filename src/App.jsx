@@ -11,6 +11,7 @@ import EventsManager from './pages/EventsManager';
 import RepresentativesManager from './pages/RepresentativesManager';
 import MyLeads from './pages/MyLeads';
 import CampaignsManager from './pages/CampaignsManager';
+import Login from './pages/Login';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth } = useAuth();
@@ -33,6 +34,7 @@ const AuthenticatedApp = () => {
       <Route path="/representatives" element={<RepresentativesManager />} />
       <Route path="/my-leads" element={<MyLeads />} />
       <Route path="/campaigns" element={<CampaignsManager />} />
+      <Route path="/login" element={<Login />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

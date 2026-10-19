@@ -41,7 +41,18 @@ export const auth = {
     return () => data.subscription.unsubscribe();
   },
 
+  /** נבדק בשרת: האם הכתובת רשומה כנציג פעיל או כאדמין */
+  async canLogin(email) {
+    const { data, error } = await supabase.rpc('can_login', { p_email: email.trim().toLowerCase() });
+    if (error) return true; // לא חוסמים בגלל תקלת רשת — ההרשאות בשרת ממילא מגינות
+    return data === true;
+  },
+
   async sendCode(email) {
+    if (!(await auth.canLogin(email))) {
+      throw new Error('הכתובת הזו אינה רשומה כנציג במערכת. פנה למנהל המערכת.');
+    }
+
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
       options: { shouldCreateUser: true },
