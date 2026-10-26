@@ -1,0 +1,26 @@
+# פריסה סטטית של ה-SPA.
+# הדומיין רשום ב-IONOS ונשאר שם — Netlify נבחרה כי היא תומכת בדומיין שורש
+# (knauf-il-leads.com בלי www) דרך שינוי רשומת A אחת, בלי להעביר שרתי שמות.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# ניתוב בצד הלקוח: כל כתובת מגישה את index.html, אחרת /admin ו-/my-leads
+# יחזירו 404 בטעינה ישירה או ברענון.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

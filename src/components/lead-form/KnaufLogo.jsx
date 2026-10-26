@@ -20,7 +20,7 @@ export default function KnaufLogo({ className = "", size = "md" }) {
         </span>
       ) : (
         <img
-          src="https://media.base44.com/images/public/6a15a08fdeebfd8254f3814d/25e6708d9_KNAUFLogo2024WhitesRGB.png"
+          src="/brand/knauf-logo.png"
           alt="KNAUF"
           className={`${currentSizes.main} w-auto object-contain`}
           referrerPolicy="no-referrer"

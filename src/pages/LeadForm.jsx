@@ -207,7 +207,7 @@ export default function LeadForm() {
         <div className="max-w-2xl mx-auto flex flex-col items-center justify-center gap-2">
           <div className="flex items-end justify-center gap-4">
             <img
-              src="https://media.base44.com/images/public/6a15a08fdeebfd8254f3814d/25e6708d9_KNAUFLogo2024WhitesRGB.png"
+              src="/brand/knauf-logo.png"
               alt="KNAUF"
               className="h-20 sm:h-28 w-auto object-contain" />
           </div>
@@ -377,7 +377,7 @@ export default function LeadForm() {
         </p>
         <div className="mt-8 flex justify-center">
           <img
-            src="https://media.base44.com/images/public/6a15a08fdeebfd8254f3814d/7144d8e9b_KNAUFStatementWhitesRGB1Line.png"
+            src="/brand/knauf-statement.png"
             alt="KNAUF - Build on us"
             className="h-12 sm:h-16 w-auto object-contain opacity-90" />
         </div>
