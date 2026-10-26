@@ -1,0 +1,43 @@
+# נוהל עלייה לאוויר
+
+## מצב נוכחי
+
+| | |
+|---|---|
+| אירוח | Netlify — אתר `knauf-leads`, חשבון `knauf.il.leads@gmail.com` |
+| כתובת זמנית | https://knauf-leads.netlify.app |
+| דומיין | `knauf-il-leads.com` מחובר לאתר ב-Netlify, **אבל ה-DNS עדיין מצביע ל-Base44** |
+| מסד נתונים | Supabase `knauf-leads-eu` (פרנקפורט) |
+
+## הצעד שמעביר את האוויר — שינוי רשומת A ב-IONOS
+
+1. להיכנס ל-IONOS → Domains & SSL → `knauf-il-leads.com` → DNS
+2. למצוא את רשומת **A** של השורש (`@` או הדומיין עצמו), כרגע `216.24.57.1`
+3. לשנות את הערך ל: **`75.2.60.5`**
+4. לוודא ש-TTL נשאר 300 שניות (5 דקות) — זה מה שמאפשר חזרה מהירה
+5. אם קיימת רשומת `www`: לשנות ל-CNAME בשם `knauf-leads.netlify.app`
+
+התפשטות: כ-5 דקות. תעודת ה-SSL מונפקת אוטומטית תוך דקות ספורות אחרי שה-DNS מצביע.
+
+## לפני השינוי (אני מריץ)
+
+```bash
+node scripts/preflight.mjs            # 32 בדיקות
+node scripts/import-to-supabase.mjs   # סנכרון אחרון מ-Base44
+node scripts/exit-test-mode.mjs       # החזרת תפוצת ההתראות, מחיקת נתוני בדיקה
+node scripts/setup-webhook.mjs --reminders   # הדלקת התזכורות היומיות
+```
+
+## אחרי השינוי (לבדוק יחד)
+
+- [ ] האתר נפתח ב-https://knauf-il-leads.com עם מנעול SSL
+- [ ] הטופס נטען בנייד, הלוגו מופיע
+- [ ] ליד בדיקה נשמר ומייל מגיע לנציג
+- [ ] התחברות עם קוד עובדת
+- [ ] `/admin` מציג את כל הלידים
+- [ ] למחוק את ליד הבדיקה
+
+## אם משהו משתבש
+
+ראה [ROLLBACK.md](ROLLBACK.md) — החזרת רשומת ה-A ל-`216.24.57.1`, או שימוש ישיר
+ב-https://knauf-il-leads.base44.app.
