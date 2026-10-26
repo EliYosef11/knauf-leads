@@ -93,6 +93,12 @@ try {
   const reps = await service.from('representatives').select('email').eq('is_active', true);
   ok('לכל הנציגים הפעילים יש כתובת מייל', reps.data.every((r) => r.email && r.email.includes('@')));
 
+  // ליד שהמייל עליו אינו של נציג פעיל — הנציג פשוט לא יראה אותו כשיתחבר
+  const mismatched = await runSql(
+    "select l.assigned_to, l.assigned_email, count(*)::int as n from public.leads l where l.is_sample = false and l.assigned_email is not null and l.assigned_email <> '' and not exists (select 1 from public.representatives r where lower(r.email) = lower(l.assigned_email) and r.is_active) group by 1,2;");
+  ok('כל הלידים משויכים למייל של נציג פעיל', (mismatched?.length ?? 0) === 0,
+    (mismatched ?? []).map((m) => `${m.assigned_to}: ${m.assigned_email} (${m.n})`).join(', '));
+
   // ── אורח (הטופס בכנס) ────────────────────────────────────────────────────
   section('אורח — הטופס בכנס');
   ok('קורא כנסים', (await guest.from('events').select('id')).data?.length === backup.Event.length);

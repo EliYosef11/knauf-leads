@@ -35,7 +35,29 @@ function SettingsContent() {
   const [sendingReminders, setSendingReminders] = useState(false);
   const [remindersSent, setRemindersSent] = useState(null);
 
+  // הכפתור הזה שולח מייל לכל נציג שיש לו ליד פתוח. לחיצה בטעות מגיעה לאנשים
+  // אמיתיים ואי אפשר להחזיר אותה, ולכן מראים קודם למי בדיוק זה הולך.
   const sendRemindersNow = async () => {
+    const cutoff = new Date(Date.now() - (Number(reminderDays) || 7) * 86400000).toISOString();
+    const pending = await db.Lead.filter({ status: 'טרם טופל', created_date: { $lt: cutoff } }, '-created_date', 500);
+    const candidates = pending.filter(
+      lead => lead.assigned_email && !(lead.reminder_log || []).some(entry => entry.triggered_by === 'scheduled'),
+    );
+    const recipients = new Set(candidates.map(lead => lead.assigned_email));
+
+    if (candidates.length === 0) {
+      setRemindersSent(0);
+      setTimeout(() => setRemindersSent(null), 5000);
+      return;
+    }
+
+    const approved = window.confirm(
+      `ישלחו תזכורות על ${candidates.length} לידים אל ${recipients.size} נציגים:\n\n` +
+      [...recipients].join('\n') +
+      '\n\nלהמשיך?',
+    );
+    if (!approved) return;
+
     setSendingReminders(true);
     setRemindersSent(null);
     const res = await invokeFunction('sendReminderEmail', {});

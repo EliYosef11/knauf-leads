@@ -28,8 +28,32 @@ Deno.serve(async (req) => {
     const { data: lead } = await client.from('leads').select('*').eq('id', leadId).single<Lead>();
     if (!lead) return json({ error: 'Lead not found' }, { status: 404 });
 
-    const mainTo = lead.assigned_email;
-    if (!mainTo) return json({ ok: false, error: 'No assigned email for lead' }, { status: 400 });
+    // הנמען נקבע מול טבלת הנציגים ולא מתוך הליד:
+    //   1. הטופס ציבורי, ולכן כל אחד יכול לשלוח assigned_email שרירותי — בלי הבדיקה הזו
+    //      המערכת הופכת לשרת דיוור פתוח שמוען בשם KNAUF.
+    //   2. בנתונים יש לידים שהמייל עליהם אינו תואם לרשומת הנציג (שגיאת הקלדה היסטורית),
+    //      והתאמה לפי השם מחזירה אותם למסלול הנכון.
+    const { data: activeReps } = await client
+      .from('representatives')
+      .select('name, email')
+      .eq('is_active', true);
+
+    const normalize = (value?: string | null) => (value ?? '').trim().toLowerCase();
+
+    const byEmail = (activeReps ?? []).find((r) => normalize(r.email) === normalize(lead.assigned_email));
+    const byName = (activeReps ?? []).find((r) => normalize(r.name) === normalize(lead.assigned_to));
+    const recipient = byEmail ?? byName;
+
+    if (!recipient?.email) {
+      return json({
+        ok: false,
+        error: 'assigned_email does not belong to an active representative',
+        lead_id: leadId,
+      }, { status: 422 });
+    }
+
+    const mainTo = recipient.email;
+    const correctedFrom = byEmail ? null : lead.assigned_email ?? null;
 
     const ccList = (await notificationEmails(client)).filter((e) => e !== mainTo);
 
@@ -68,7 +92,7 @@ Deno.serve(async (req) => {
       html: newLeadHtml(lead, tableRows),
     });
 
-    return json({ ok: true, to: mainTo, cc: ccList });
+    return json({ ok: true, to: mainTo, cc: ccList, corrected_from: correctedFrom });
   } catch (error) {
     return json({ error: (error as Error).message }, { status: 500 });
   }
