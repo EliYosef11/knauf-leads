@@ -5,13 +5,16 @@
  * כאן אנחנו שולחים ישירות מאותה כתובת דרך SMTP של Gmail עם סיסמת אפליקציה,
  * כך שכתובת השולח שהנציגים מכירים נשארת בדיוק אותה כתובת.
  *
+ * ההודעה נבנית ב-_shared/smtp.ts ולא בספריית צד שלישי — ראה שם את הסיבה
+ * (כותרות בעברית נשברו ל-`=?utf-8?Q?=d7...` בתיבה של הנמען).
+ *
  * סודות (Edge Function secrets):
- *   GMAIL_ADDRESS       כתובת החשבון, למשל knauf.leads@gmail.com
+ *   GMAIL_ADDRESS       כתובת החשבון, למשל knauf.il.leads@gmail.com
  *   GMAIL_APP_PASSWORD  סיסמת אפליקציה בת 16 תווים מחשבון Google (דורש אימות דו-שלבי)
  *   MAIL_FROM_NAME      אופציונלי, שם התצוגה. ברירת מחדל: KNAUF Leads
  */
 
-import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
+import { sendViaSmtp, encodeHeader } from './smtp.ts';
 
 export interface Mail {
   to: string;
@@ -32,27 +35,22 @@ export function senderAddress(): string {
 
 export async function sendMail({ to, subject, html, cc }: Mail): Promise<void> {
   const address = required('GMAIL_ADDRESS');
-  const client = new SMTPClient({
-    connection: {
-      hostname: 'smtp.gmail.com',
-      port: 465,
-      tls: true,
-      auth: { username: address, password: required('GMAIL_APP_PASSWORD') },
-    },
-  });
-
+  const displayName = Deno.env.get('MAIL_FROM_NAME') ?? 'KNAUF Leads';
   const ccList = Array.isArray(cc) ? cc : cc ? [cc] : [];
 
-  try {
-    await client.send({
-      from: `${Deno.env.get('MAIL_FROM_NAME') ?? 'KNAUF Leads'} <${address}>`,
+  await sendViaSmtp(
+    {
+      hostname: 'smtp.gmail.com',
+      port: 465,
+      username: address,
+      password: required('GMAIL_APP_PASSWORD'),
+    },
+    {
+      from: `${encodeHeader(displayName)} <${address}>`,
       to,
-      cc: ccList.length > 0 ? ccList : undefined,
+      cc: ccList,
       subject,
       html,
-      // נמענים בעברית/RTL — denomailer מקודד את הכותרות ב-UTF-8 לבד
-    });
-  } finally {
-    await client.close();
-  }
+    },
+  );
 }

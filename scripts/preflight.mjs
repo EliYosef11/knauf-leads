@@ -7,8 +7,11 @@
  * בודקת: שלמות נתונים, מה אורח יכול ולא יכול, שער ההתחברות, הפרדת הרשאות בין
  * נציגים, הרשאות אדמין, הטריגר שמייצר מייל על ליד חדש, וארבע הפונקציות ששולחות מייל.
  *
- * כל מה שנוצר בדרך מסומן is_sample ונמחק בסוף. מיילי הבדיקה נשלחים אך ורק
- * לתיבת המערכת, לעולם לא לנציג אמיתי.
+ * כל מה שנוצר בדרך מסומן is_sample ונמחק בסוף.
+ *
+ * הבדיקות ששולחות מייל כבויות כברירת מחדל — הרצה חוזרת הציפה את תיבת המערכת
+ * בעשרות הודעות. להפעלה: `node scripts/preflight.mjs --emails`.
+ * גם אז המיילים נשלחים אך ורק לתיבת המערכת, לעולם לא לנציג אמיתי.
  */
 
 import { readFileSync, readdirSync } from 'node:fs';
@@ -61,6 +64,8 @@ async function runSql(query) {
   });
   return res.json();
 }
+
+const SEND_EMAILS = process.argv.includes('--emails');
 
 const TEST_REP = { email: SYSTEM_MAILBOX, name: 'נציג בדיקה (למחיקה)' };
 const OTHER_REP = { email: 'preflight-other@knauf-test.local', name: 'נציג בדיקה ב׳' };
@@ -192,22 +197,26 @@ try {
     return { status: res.status, body: await res.json().catch(() => ({})) };
   };
 
-  const test = await callFunction('send-test-email', { to: SYSTEM_MAILBOX });
-  ok('send-test-email', test.status === 200 && test.body.ok === true, JSON.stringify(test.body));
+  if (SEND_EMAILS) {
+    const test = await callFunction('send-test-email', { to: SYSTEM_MAILBOX });
+    ok('send-test-email', test.status === 200 && test.body.ok === true, JSON.stringify(test.body));
 
-  const reminder = await callFunction('send-reminder-email', { lead_id: triggeredId });
-  ok('send-reminder-email (ליד בודד)', reminder.status === 200 && reminder.body.ok === true, JSON.stringify(reminder.body));
+    const reminder = await callFunction('send-reminder-email', { lead_id: triggeredId });
+    ok('send-reminder-email (ליד בודד)', reminder.status === 200 && reminder.body.ok === true, JSON.stringify(reminder.body));
 
-  const transfer = await callFunction('transfer-lead', {
-    lead_id: triggeredId, from_rep: OTHER_REP.name, to_rep: TEST_REP.name, to_email: TEST_REP.email, reason: 'בדיקת מוכנות',
-  });
-  ok('transfer-lead', transfer.status === 200 && transfer.body.ok === true, JSON.stringify(transfer.body));
+    const transfer = await callFunction('transfer-lead', {
+      lead_id: triggeredId, from_rep: OTHER_REP.name, to_rep: TEST_REP.name, to_email: TEST_REP.email, reason: 'בדיקת מוכנות',
+    });
+    ok('transfer-lead', transfer.status === 200 && transfer.body.ok === true, JSON.stringify(transfer.body));
 
-  const report = await callFunction('export-event-email', {
-    eventName: 'בדיקת מוכנות', email: SYSTEM_MAILBOX,
-    leads: [{ full_name: 'ליד לדוגמה', phone: '050-0000000', interests: ['תקרות'] }],
-  });
-  ok('export-event-email', report.status === 200 && report.body.success === true, JSON.stringify(report.body));
+    const report = await callFunction('export-event-email', {
+      eventName: 'בדיקת מוכנות', email: SYSTEM_MAILBOX,
+      leads: [{ full_name: 'ליד לדוגמה', phone: '050-0000000', interests: ['תקרות'] }],
+    });
+    ok('export-event-email', report.status === 200 && report.body.success === true, JSON.stringify(report.body));
+  } else {
+    console.log('⏭️  בדיקות שליחת מייל דולגו (--emails כדי להפעיל)');
+  }
 
   const meta = await fetch(`${URL_}/functions/v1/meta-webhook?hub.mode=subscribe&hub.verify_token=knauf-meta-webhook&hub.challenge=12345`);
   ok('meta-webhook עונה לאימות של Meta', meta.status === 200 && (await meta.text()) === '12345');
