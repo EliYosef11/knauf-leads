@@ -12,7 +12,6 @@ import KnaufLogo from '../components/lead-form/KnaufLogo';
 import { useLang } from '../hooks/useLang';
 import { translations } from '../lib/i18n';
 import LangToggle from '../components/LangToggle';
-import AdminAccessCard from '@/components/admin/AdminAccessCard';
 import UserBadge from '@/components/auth/UserBadge';
 
 export default function Settings() {
@@ -142,8 +141,6 @@ function SettingsContent() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-10 space-y-6">
-        <AdminAccessCard />
-
         <div className="bg-card border border-border rounded-2xl p-6 flex items-center justify-between">
           <div>
             <h2 className="font-display font-semibold text-lg">{t.emailAlertsTitle}</h2>

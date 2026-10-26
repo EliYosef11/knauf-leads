@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { db } from '@/api/db';
+import { supabase } from '@/api/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { ArrowRight, Users, Plus, Trash2, Loader2, Check, GripVertical, Pencil, X } from 'lucide-react';
+import { ArrowRight, Users, Plus, Trash2, Loader2, Check, GripVertical, Pencil, X, ShieldCheck } from 'lucide-react';
 import AdminGuard from '../components/admin/AdminGuard';
 import KnaufLogo from '../components/lead-form/KnaufLogo';
 import { useLang } from '../hooks/useLang';
@@ -24,6 +26,7 @@ export default function RepresentativesManager() {
 
 function RepsContent() {
   const queryClient = useQueryClient();
+  const { email: myEmail } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [roleTitle, setRoleTitle] = useState('');
@@ -36,6 +39,27 @@ function RepsContent() {
   const { data: reps = [], isLoading } = useQuery({
     queryKey: ['reps-all'],
     queryFn: () => db.Representative.list('sort_order', 200),
+  });
+
+  // מי מהנציגים הוא גם מנהל. הרשימה היא טבלת `admins`; הבדיקה בפועל נעשית בשרת
+  // (`is_admin()`), כך שכיבוי ההרשאה מסיר גישה מיידית גם למי שמחובר כרגע.
+  const { data: admins = [] } = useQuery({
+    queryKey: ['admins'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('admins').select('email');
+      if (error) throw new Error(error.message);
+      return data.map((row) => row.email.toLowerCase());
+    },
+  });
+
+  const toggleAdmin = useMutation({
+    mutationFn: async ({ repEmail, shouldBeAdmin }) => {
+      const { error } = shouldBeAdmin
+        ? await supabase.from('admins').insert({ email: repEmail })
+        : await supabase.from('admins').delete().eq('email', repEmail);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admins'] }),
   });
 
   // Sync localReps from server only when localReps is null (initial load or after add/delete)
@@ -167,6 +191,13 @@ function RepsContent() {
                               rep={rep}
                               onUpdate={updateRep}
                               onRemove={removeRep}
+                              isAdmin={admins.includes((rep.email || '').toLowerCase())}
+                              // מנהל לא מסיר את עצמו — אחרת אפשר להישאר בלי אף מנהל
+                              isSelf={(rep.email || '').toLowerCase() === (myEmail || '').toLowerCase()}
+                              adminPending={toggleAdmin.isPending}
+                              onToggleAdmin={(shouldBeAdmin) =>
+                                toggleAdmin.mutate({ repEmail: rep.email.toLowerCase(), shouldBeAdmin })
+                              }
                               t={t}
                               dragHandleProps={provided.dragHandleProps}
                             />
@@ -186,7 +217,7 @@ function RepsContent() {
   );
 }
 
-function RepRow({ rep, onUpdate, onRemove, t, dragHandleProps }) {
+function RepRow({ rep, onUpdate, onRemove, isAdmin, isSelf, adminPending, onToggleAdmin, t, dragHandleProps }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(rep.name || '');
   const [email, setEmail] = useState(rep.email || '');
@@ -256,6 +287,20 @@ function RepRow({ rep, onUpdate, onRemove, t, dragHandleProps }) {
               />
               <span className="text-xs text-muted-foreground">{t.activeLabel}</span>
             </div>
+            <button
+              type="button"
+              onClick={() => onToggleAdmin(!isAdmin)}
+              disabled={isSelf || adminPending || !rep.email}
+              title={isSelf ? t.adminSelfHint : !rep.email ? t.adminNoEmailHint : undefined}
+              className={`flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                isAdmin
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-transparent text-muted-foreground border-border hover:border-primary hover:text-primary'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {t.adminLabel}
+            </button>
             <button onClick={() => setEditing(true)} className="text-muted-foreground hover:text-primary p-1.5 rounded-md">
               <Pencil className="w-4 h-4" />
             </button>

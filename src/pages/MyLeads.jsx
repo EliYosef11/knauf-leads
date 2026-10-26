@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/db';
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Star, CheckCircle2, Clock, Loader2, Phone, Mail, Cloud, Download, ArrowLeftRight, Search, ChevronDown } from 'lucide-react';
+import { ArrowRight, Star, CheckCircle2, Clock, Loader2, Phone, Mail, Cloud, Download, ArrowLeftRight } from 'lucide-react';
 import { format } from 'date-fns';
 import KnaufLogo from '../components/lead-form/KnaufLogo';
 import { useLang } from '../hooks/useLang';
@@ -17,73 +17,8 @@ import { useAuth } from '@/lib/AuthContext';
 import LoginCard from '@/components/auth/LoginCard';
 import UserBadge from '@/components/auth/UserBadge';
 
-function RepSearchSelect({ reps, value, onChange, placeholder }) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const ref = useRef(null);
-
-  const filtered = reps.filter(r => r.name.toLowerCase().includes(search.toLowerCase()));
-
-  useEffect(() => {
-    const handleClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
-
-  const selected = reps.find(r => r.name === value);
-
-  return (
-    <div className="relative" ref={ref} dir="rtl">
-      <button
-        type="button"
-        onClick={() => { setOpen(!open); setSearch(''); }}
-        className="flex h-11 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-      >
-        <span className={selected ? 'text-foreground' : 'text-muted-foreground'}>
-          {selected ? selected.name : placeholder}
-        </span>
-        <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
-      </button>
-      {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-white shadow-lg overflow-hidden">
-          <div className="p-2 border-b border-border">
-            <div className="flex items-center gap-2 px-2 rounded-lg border border-input bg-secondary/30">
-              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-              <input
-                autoFocus
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="flex-1 py-2 text-sm bg-transparent outline-none"
-                placeholder="חיפוש נציג..."
-              />
-            </div>
-          </div>
-          <div className="max-h-52 overflow-y-auto">
-            {filtered.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-muted-foreground text-center">לא נמצאו תוצאות</div>
-            ) : (
-              filtered.map(r => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => { onChange(r.name); setOpen(false); }}
-                  className={`w-full text-start px-4 py-3 text-sm hover:bg-secondary/60 transition-colors flex items-center justify-between ${value === r.name ? 'bg-secondary font-semibold' : ''}`}
-                >
-                  <span>{r.name}</span>
-                  {r.role_title && <span className="text-xs text-muted-foreground">{r.role_title}</span>}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function MyLeadsContent() {
-  const { email, isAdmin } = useAuth();
-  const [selectedRep, setSelectedRep] = useState('');
+  const { email } = useAuth();
   const [selectedEvent, setSelectedEvent] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterQuality, setFilterQuality] = useState('all');
@@ -97,21 +32,25 @@ function MyLeadsContent() {
     queryFn: () => db.Representative.filter({ is_active: true }, 'sort_order', 100),
   });
 
-  // הנציג המחובר מזוהה לפי המייל שלו, ולא לפי בחירה מרשימה
+  // הנציג המחובר מזוהה לפי המייל שלו — אין בחירה מרשימה, גם לא למנהל
   const myRep = useMemo(
     () => reps.find(r => (r.email || '').toLowerCase() === (email || '').toLowerCase()),
     [reps, email],
   );
-  const activeRep = isAdmin ? selectedRep : (myRep?.name || '');
+  const myName = myRep?.name || '';
 
-  const { data: leads = [], isLoading } = useQuery({
-    queryKey: ['my-leads', activeRep, isAdmin, email],
-    // לנציג אין צורך לסנן לפי שם — ה-RLS בשרת כבר מחזיר רק את הלידים שמשויכים למייל שלו
-    queryFn: () => isAdmin
-      ? db.Lead.filter({ assigned_to: activeRep }, '-created_date', 500)
-      : db.Lead.list('-created_date', 500),
-    enabled: isAdmin ? !!activeRep : Boolean(myRep),
+  const { data: allLeads = [], isLoading } = useQuery({
+    queryKey: ['my-leads', email],
+    queryFn: () => db.Lead.list('-created_date', 500),
+    enabled: Boolean(email),
   });
+
+  // ה-RLS כבר מגביל נציג ללידים שלו; למנהל הוא מחזיר הכל, ולכן מסננים כאן
+  // כדי שגם מנהל יראה במסך הזה רק את הלידים המשויכים אליו
+  const leads = useMemo(
+    () => allLeads.filter(l => (l.assigned_email || '').toLowerCase() === (email || '').toLowerCase()),
+    [allLeads, email],
+  );
 
   const availableEvents = useMemo(() => {
     return Array.from(new Set(leads.map(l => l.event_name).filter(Boolean))).sort();
@@ -145,7 +84,7 @@ function MyLeadsContent() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `leads_${activeRep}_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.download = `leads_${myName || email}_${format(new Date(), 'yyyy-MM-dd')}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -180,22 +119,13 @@ function MyLeadsContent() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">{t.selectYourName}</label>
-              {isAdmin ? (
-                <RepSearchSelect
-                  reps={reps}
-                  value={selectedRep}
-                  onChange={v => { setSelectedRep(v); setSelectedEvent('all'); setFilterStatus('all'); setFilterQuality('all'); setFilterCrm('all'); }}
-                  placeholder={t.selectRepPlaceholder}
-                />
-              ) : (
-                <div className="flex h-11 w-full items-center rounded-md border border-input bg-secondary/30 px-3 text-base" dir="rtl">
-                  <span className={myRep ? 'text-foreground font-semibold' : 'text-muted-foreground'}>
-                    {myRep ? myRep.name : email}
-                  </span>
-                </div>
-              )}
+              <div className="flex h-11 w-full items-center rounded-md border border-input bg-secondary/30 px-3 text-base" dir="rtl">
+                <span className={myRep ? 'text-foreground font-semibold' : 'text-muted-foreground'}>
+                  {myRep ? myRep.name : email}
+                </span>
+              </div>
             </div>
-            {activeRep && availableEvents.length > 0 && (
+            {availableEvents.length > 0 && (
               <>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-foreground">{t.filterByEvent}</label>
@@ -254,7 +184,7 @@ function MyLeadsContent() {
             )}
           </div>
 
-          {activeRep && leads.length > 0 && (
+          {leads.length > 0 && (
             <>
               <div className="flex gap-4 pt-2 border-t border-border text-sm text-muted-foreground flex-wrap">
                 <span>{t.totalLabel}: <strong className="text-foreground">{filtered.length}</strong></span>
@@ -271,11 +201,7 @@ function MyLeadsContent() {
           )}
         </div>
 
-        {!activeRep ? (
-          <div className="text-center py-20 border border-dashed border-border rounded-2xl text-muted-foreground">
-            {t.selectNamePrompt}
-          </div>
-        ) : isLoading ? (
+        {isLoading ? (
           <div className="py-20 text-center">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground mx-auto" />
           </div>
@@ -286,7 +212,7 @@ function MyLeadsContent() {
         ) : (
           <div className="space-y-3">
             {filtered.map(lead => (
-              <LeadCard key={lead.id} lead={lead} t={t} selectedRep={activeRep} />
+              <LeadCard key={lead.id} lead={lead} t={t} selectedRep={myName} />
             ))}
           </div>
         )}
