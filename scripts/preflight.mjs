@@ -66,11 +66,15 @@ const TEST_REP = { email: SYSTEM_MAILBOX, name: 'נציג בדיקה (למחיק
 const OTHER_REP = { email: 'preflight-other@knauf-test.local', name: 'נציג בדיקה ב׳' };
 const createdLeadIds = [];
 
+// מספר ייחודי לכל ליד בדיקה: הגנת ההצפה חוסמת אותו טלפון פעמיים ב-30 שניות
+let phoneCounter = 0;
+const uniquePhone = () => `050-${String(Date.now() % 10000000 + phoneCounter++).padStart(7, '0')}`;
+
 async function makeLead(fields) {
   const id = `preflight-${Math.random().toString(36).slice(2, 9)}`;
   createdLeadIds.push(id);
   const { error } = await service.from('leads').insert({
-    id, full_name: 'בדיקת מוכנות — למחיקה', phone: '050-0000000', is_sample: true, ...fields,
+    id, full_name: 'בדיקת מוכנות — למחיקה', phone: uniquePhone(), is_sample: true, ...fields,
   });
   if (error) throw new Error(error.message);
   return id;
@@ -108,12 +112,20 @@ try {
   const guestLeadId = `preflight-guest-${Math.random().toString(36).slice(2, 7)}`;
   createdLeadIds.push(guestLeadId);
   const guestInsert = await guest.from('leads').insert({
-    id: guestLeadId, full_name: 'ליד מהטופס — למחיקה', phone: '050-0000000',
+    id: guestLeadId, full_name: 'ליד מהטופס — למחיקה', phone: uniquePhone(),
     event_id: null, assigned_to: TEST_REP.name, assigned_email: TEST_REP.email, is_sample: true,
   });
   ok('יוצר ליד (ללא התחברות)', !guestInsert.error, guestInsert.error?.message);
   ok('לא יכול למחוק ליד', Boolean((await guest.from('leads').delete().eq('id', guestLeadId)).error) ||
     (await service.from('leads').select('id').eq('id', guestLeadId)).data.length === 1);
+
+  const floodPhone = uniquePhone();
+  const floodA = `preflight-flood-a-${Math.random().toString(36).slice(2, 6)}`;
+  const floodB = `preflight-flood-b-${Math.random().toString(36).slice(2, 6)}`;
+  createdLeadIds.push(floodA, floodB);
+  await guest.from('leads').insert({ id: floodA, full_name: 'הצפה א', phone: floodPhone, is_sample: true });
+  const second = await guest.from('leads').insert({ id: floodB, full_name: 'הצפה ב', phone: floodPhone, is_sample: true });
+  ok('שליחה כפולה של אותו מספר נחסמת', Boolean(second.error));
 
   // ── שער ההתחברות ─────────────────────────────────────────────────────────
   section('מי יכול להתחבר');

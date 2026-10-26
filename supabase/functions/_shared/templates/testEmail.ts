@@ -30,8 +30,7 @@ export const testEmailHtml: string = `<!DOCTYPE html>
       <tr><td style="padding:0 32px;"><div style="height:1px;background:#e8edf4;"></div></td></tr>
       <tr>
         <td style="padding:20px 32px 28px 32px;text-align:center;">
-          <p style="margin:0 0 14px 0;font-size:13px;color:#475569;">לטיפול בליד ועדכון הסטטוס, היכנס למערכת:</p>
-          <a href="https://knauf-il-leads.com/my-leads" style="display:inline-block;background:#0ea5e9;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:14px;">כניסה למערכת הלידים</a>
+          <p style="margin:0;font-size:13px;color:#475569;">לטיפול בליד ועדכון הסטטוס, היכנסו למערכת הלידים של KNAUF.</p>
         </td>
       </tr>
       <tr>

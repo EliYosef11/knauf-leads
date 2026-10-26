@@ -13,15 +13,19 @@
 
 import { serviceClient } from '../_shared/db.ts';
 
+// הערכים חייבים להיות זהים לרשימה שבטופס (src/lib/i18n.js), אחרת ליד מקמפיין
+// נשמר עם תפקיד שלא קיים בסינונים של מסך הניהול.
 function mapClientType(value: string): string {
   if (!value) return 'אחר';
   const v = value.toLowerCase();
-  if (v.includes('קבלן') || v.includes('contractor')) return 'קבלן';
-  if (v.includes('אדריכל') || v.includes('architect')) return 'אדריכל';
-  if (v.includes('מעצב') || v.includes('designer')) return 'מעצב פנים';
-  if (v.includes('מהנדס') || v.includes('engineer')) return 'מהנדס';
-  if (v.includes('יזם') || v.includes('developer')) return 'יזם';
-  if (v.includes('מפקח') || v.includes('inspector')) return 'מפקח';
+  if (v.includes('קבלן') || v.includes('contractor')) return 'קבלן/ית';
+  if (v.includes('אדריכל') || v.includes('architect')) return 'אדריכל/ית';
+  if (v.includes('מעצב') || v.includes('designer')) return 'מעצב/ת פנים';
+  if (v.includes('מהנדס') || v.includes('engineer')) return 'מהנדס/ת';
+  if (v.includes('יזם') || v.includes('developer')) return 'יזם/ית';
+  if (v.includes('מפקח') || v.includes('inspector')) return 'מפקח/ית';
+  if (v.includes('יועץ') || v.includes('consultant')) return 'יועץ/ת';
+  if (v.includes('פרטי') || v.includes('private')) return 'פרטי';
   return 'אחר';
 }
 

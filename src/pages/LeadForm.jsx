@@ -17,6 +17,8 @@ import { translations } from '../lib/i18n';
 import { useLang } from '../hooks/useLang';
 import LangToggle from '../components/LangToggle';
 import UserBadge from '@/components/auth/UserBadge';
+import { supabase } from '@/api/supabaseClient';
+import { enqueue, flushQueue, pendingCount } from '@/lib/offline-queue';
 
 const EMPTY = {
   full_name: '',
@@ -68,6 +70,18 @@ export default function LeadForm() {
     setError('');
   };
 
+  // שליחה חוזרת של לידים שנשמרו מקומית — בטעינה וכשהחיבור חוזר
+  const [pending, setPending] = useState(pendingCount());
+  useEffect(() => {
+    const flush = async () => {
+      const sent = await flushQueue((lead) => db.Lead.create(lead));
+      if (sent > 0) setPending(pendingCount());
+    };
+    flush();
+    window.addEventListener('online', flush);
+    return () => window.removeEventListener('online', flush);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -80,6 +94,28 @@ export default function LeadForm() {
       return;
     }
     setSubmitting(true);
+
+    // אזהרת כפילות: אותו טלפון באותו כנס (או ב-24 השעות האחרונות ללא כנס)
+    try {
+      const { data: duplicates } = await supabase.rpc('lead_already_exists', {
+        p_phone: form.phone,
+        p_event_id: currentEvent?.id ?? null,
+      });
+      const duplicate = duplicates?.[0];
+      if (duplicate?.exists_already) {
+        const when = new Date(duplicate.created_date).toLocaleString('he-IL');
+        const proceed = window.confirm(
+          `${t.duplicateWarning}\n\n${duplicate.assigned_to || '—'} · ${when}\n\n${t.duplicateQuestion}`,
+        );
+        if (!proceed) {
+          setSubmitting(false);
+          return;
+        }
+      }
+    } catch {
+      // בדיקת כפילות היא נוחות בלבד — לא עוצרים בגללה שליחה
+    }
+
     try {
       const assignedRep = reps.find((r) => r.name === form.assigned_to);
       await db.Lead.create({
@@ -92,6 +128,26 @@ export default function LeadForm() {
       });
       setSuccess(true);
     } catch (err) {
+      // שמירה כפולה בתוך שניות — לחיצה כפולה על "שמור". הליד כבר במערכת,
+      // ולכן מבחינת הנציג זו הצלחה ולא תקלה.
+      if (/duplicate submission/i.test(err.message || '')) {
+        setSuccess(true);
+        return;
+      }
+
+      // אין רשת: שומרים את הליד במכשיר במקום לאבד אותו, והוא יישלח כשהחיבור יחזור
+      const offline = !navigator.onLine || /fetch|network/i.test(err.message || '');
+      if (offline) {
+        const assignedRep = reps.find((r) => r.name === form.assigned_to);
+        setPending(enqueue({
+          ...form,
+          event_name: currentEvent?.name || 'ליד כללי',
+          event_id: currentEvent?.id || null,
+          assigned_email: assignedRep?.email || null,
+        }));
+        setSuccess(true);
+        return;
+      }
       // מציגים גם את הסיבה הטכנית — בלעדיה תקלה בכנס נראית כמו "נסה שוב" אינסופי
       setError(`${t.errorGeneral} (${err.message})`);
       setSubmitting(false);
@@ -137,6 +193,14 @@ export default function LeadForm() {
           </Link>
         </div>
       </div>
+
+      {pending > 0 && (
+        <div className="absolute top-16 left-2 right-2 z-20 flex justify-center">
+          <span className="text-xs text-white bg-amber-500/90 rounded-full px-4 py-1.5 shadow-md">
+            {t.pendingLeads(pending)}
+          </span>
+        </div>
+      )}
 
       {/* Centered logo header */}
       <header className="pt-16 sm:pt-20 pb-2 px-5">

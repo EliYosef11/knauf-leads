@@ -17,6 +17,7 @@ import { useLang } from '../hooks/useLang';
 import { translations } from '../lib/i18n';
 import LangToggle from '../components/LangToggle';
 import UserBadge from '@/components/auth/UserBadge';
+import { AlertTriangle } from 'lucide-react';
 
 export default function AdminDashboard() {
   return (
@@ -110,6 +111,22 @@ function DashboardContent() {
       });
     }
   }, [filtered, isFiltering]);
+
+  // כנס שמכסה את היום — בלעדיו כל ליד נקלט כ"ליד כללי" בלי שיוך
+  const todayISO = format(new Date(), 'yyyy-MM-dd');
+  const eventToday = useMemo(
+    () => events.find((ev) => {
+      const end = (ev.event_end_date && ev.event_end_date.trim()) ? ev.event_end_date : ev.event_date;
+      return ev.event_date <= todayISO && end >= todayISO;
+    }),
+    [events, todayISO],
+  );
+
+  // לידים שההתראה עליהם נכשלה — הנציג לא יודע שיש לו ליד
+  const failedNotifications = useMemo(
+    () => leads.filter((lead) => lead.notify_error),
+    [leads],
+  );
 
   const stats = useMemo(() => {
     const today = startOfDay(new Date());
@@ -249,6 +266,26 @@ function DashboardContent() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+        {!eventToday && (
+          <Link to="/events" className="block">
+            <div className="bg-amber-50 border border-amber-300 rounded-2xl px-5 py-4 flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+              <p className="text-sm text-amber-900">
+                {t.noEventToday}
+              </p>
+            </div>
+          </Link>
+        )}
+
+        {failedNotifications.length > 0 && (
+          <div className="bg-red-50 border border-red-300 rounded-2xl px-5 py-4 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+            <p className="text-sm text-red-900">
+              {t.failedNotifications(failedNotifications.length)}
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <StatCard icon={Users} label={t.totalLeads} value={stats.total} />
           <StatCard icon={TrendingUp} label={t.todayLeads} value={stats.today} accent />

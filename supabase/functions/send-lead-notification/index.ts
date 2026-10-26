@@ -44,12 +44,13 @@ Deno.serve(async (req) => {
     const byName = (activeReps ?? []).find((r) => normalize(r.name) === normalize(lead.assigned_to));
     const recipient = byEmail ?? byName;
 
+    const fail = async (reason: string, status: number) => {
+      await client.from('leads').update({ notify_error: reason }).eq('id', leadId);
+      return json({ ok: false, error: reason, lead_id: leadId }, { status });
+    };
+
     if (!recipient?.email) {
-      return json({
-        ok: false,
-        error: 'assigned_email does not belong to an active representative',
-        lead_id: leadId,
-      }, { status: 422 });
+      return fail('assigned_email does not belong to an active representative', 422);
     }
 
     const mainTo = recipient.email;
@@ -85,12 +86,22 @@ Deno.serve(async (req) => {
       `<tr><td style="padding:7px 20px 7px 0;color:#94a3b8;white-space:nowrap;vertical-align:top;font-family:'Heebo',Arial,sans-serif;font-size:13px;font-weight:500;">${label}</td><td style="padding:7px 0;color:#1e293b;font-family:'Heebo',Arial,sans-serif;font-weight:600;font-size:13px;">${String(value).replace(/\n/g, '<br>')}</td></tr>`
     ).join('');
 
-    await sendMail({
-      to: mainTo,
-      cc: ccList.length > 0 ? ccList : null,
-      subject,
-      html: newLeadHtml(lead, tableRows),
-    });
+    try {
+      await sendMail({
+        to: mainTo,
+        cc: ccList.length > 0 ? ccList : null,
+        subject,
+        html: newLeadHtml(lead, tableRows),
+      });
+    } catch (sendError) {
+      return fail((sendError as Error).message, 502);
+    }
+
+    // סימון הצלחה על הליד, כדי שמסך הניהול יוכל להראות מה לא נשלח
+    await client
+      .from('leads')
+      .update({ notified_at: new Date().toISOString(), notify_error: null })
+      .eq('id', leadId);
 
     return json({ ok: true, to: mainTo, cc: ccList, corrected_from: correctedFrom });
   } catch (error) {

@@ -24,6 +24,30 @@ const url = env('VITE_SUPABASE_URL');
 const ref = new URL(url).hostname.split('.')[0];
 const serviceKey = env('SUPABASE_SECRET_KEY');
 
+// התזכורת היומית שולחת מיילים לנציגים אמיתיים, ולכן היא נדלקת רק במפורש:
+//   node scripts/setup-webhook.mjs --reminders
+// הגיבוי היומי לעומת זאת תמיד בטוח — הוא לא שולח כלום.
+const withReminders = process.argv.includes('--reminders');
+
+const reminderJob = `
+select cron.unschedule('daily-lead-reminders')
+  where exists (select 1 from cron.job where jobname = 'daily-lead-reminders');
+${withReminders ? `
+select cron.schedule(
+  'daily-lead-reminders',
+  '0 6 * * *',
+  $cron$
+  select net.http_post(
+    url     := (select value from private.config where key = 'functions_url') || '/send-reminder-email',
+    headers := jsonb_build_object(
+                 'Content-Type', 'application/json',
+                 'Authorization', 'Bearer ' || (select value from private.config where key = 'service_key')),
+    body    := '{}'::jsonb
+  );
+  $cron$
+);` : ''}
+`;
+
 const sql = `
 create extension if not exists pg_net with schema extensions;
 create extension if not exists pg_cron;
@@ -70,15 +94,17 @@ create trigger on_lead_created
   after insert on public.leads
   for each row execute function public.notify_new_lead();
 
-select cron.unschedule('daily-lead-reminders')
-  where exists (select 1 from cron.job where jobname = 'daily-lead-reminders');
+${reminderJob}
+
+select cron.unschedule('daily-backup')
+  where exists (select 1 from cron.job where jobname = 'daily-backup');
 
 select cron.schedule(
-  'daily-lead-reminders',
-  '0 6 * * *',
+  'daily-backup',
+  '0 2 * * *',
   $cron$
   select net.http_post(
-    url     := (select value from private.config where key = 'functions_url') || '/send-reminder-email',
+    url     := (select value from private.config where key = 'functions_url') || '/daily-backup',
     headers := jsonb_build_object(
                  'Content-Type', 'application/json',
                  'Authorization', 'Bearer ' || (select value from private.config where key = 'service_key')),
@@ -104,5 +130,5 @@ if (!res.ok) {
   process.exit(1);
 }
 
-console.log('הטריגר והתזכורת הוגדרו על', ref);
+console.log('הוגדרו על', ref + ':', 'טריגר ליד חדש, גיבוי יומי 02:00' + (withReminders ? ', תזכורות יומיות 06:00' : ' (תזכורות יומיות כבויות — הוסף --reminders להפעלה)'));
 console.log(body.slice(0, 300));
