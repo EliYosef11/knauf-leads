@@ -90,21 +90,26 @@ const anon = createDb(createClient(env('VITE_SUPABASE_URL'), env('VITE_SUPABASE_
   auth: { persistSession: false },
 }));
 
-check('אורח קורא כנסים (הטופס צריך אותם)', (await anon.Event.list()).length === 13);
-check('אורח קורא נציגים', (await anon.Representative.list('sort_order', 100)).length === 19);
+// מ-26.10.2026 הטופס דורש התחברות, ולכן אורח לא רואה ולא יוצר כלום
+check('אורח לא קורא כנסים', (await anon.Event.list()).length === 0);
+check('אורח לא קורא נציגים', (await anon.Representative.list('sort_order', 100)).length === 0);
 check('אורח לא קורא לידים', (await anon.Lead.list('-created_date', 500)).length === 0);
 
-// הטופס בכנס חייב לעבוד בלי התחברות — וזה גם המסלול שבו insert...returning נחסם ע"י RLS
-const anonLead = await anon.Lead.create({
-  full_name: 'בדיקת הרשאות — למחיקה',
-  phone: '000-0000000',
-  assigned_email: 'nobody@example.com',
-  is_sample: true,
-});
-check('אורח יוצר ליד דרך הטופס', Boolean(anonLead?.full_name));
+let anonCreateFailed = false;
+try {
+  await anon.Lead.create({
+    full_name: 'בדיקת הרשאות — למחיקה',
+    phone: '000-0000000',
+    assigned_email: 'nobody@example.com',
+    is_sample: true,
+  });
+} catch {
+  anonCreateFailed = true;
+}
+check('אורח לא יוצר ליד', anonCreateFailed);
 
 const written = (await db.Lead.filter({ full_name: 'בדיקת הרשאות — למחיקה' })).at(0);
-check('הליד שנוצר אכן נשמר במסד', Boolean(written));
+check('שום ליד לא נכתב למסד', !written);
 if (written) await db.Lead.delete(written.id);
 
 check('אין כפילויות ומספר הלידים נשאר 55', (await db.Lead.list('-created_date', 500)).length === 55);

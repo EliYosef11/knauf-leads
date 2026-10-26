@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +19,6 @@ const T = {
     codePlaceholder: '000000',
     send: 'שלח קוד',
     verify: 'כניסה',
-    back: 'חזרה לטופס',
     changeEmail: 'שינוי כתובת',
     sending: 'שולח...',
     errorSend: 'שליחת הקוד נכשלה. בדוק את הכתובת ונסה שוב.',
@@ -34,7 +32,6 @@ const T = {
     codePlaceholder: '000000',
     send: 'Send code',
     verify: 'Sign in',
-    back: 'Back to form',
     changeEmail: 'Change address',
     sending: 'Sending...',
     errorSend: 'Could not send the code. Check the address and try again.',
@@ -134,12 +131,6 @@ export default function LoginCard({ title, subtitle }) {
             </Button>
           </form>
         )}
-
-        <div className="mt-6 pt-6 border-t border-border">
-          <Link to="/">
-            <Button variant="ghost" className="w-full text-muted-foreground h-12">{t.back}</Button>
-          </Link>
-        </div>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import RepresentativesManager from './pages/RepresentativesManager';
 import MyLeads from './pages/MyLeads';
 import CampaignsManager from './pages/CampaignsManager';
 import Login from './pages/Login';
+import RequireAuth from '@/components/auth/RequireAuth';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth } = useAuth();
@@ -27,7 +28,7 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<LeadForm />} />
+      <Route path="/" element={<RequireAuth><LeadForm /></RequireAuth>} />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/events" element={<EventsManager />} />

@@ -149,3 +149,27 @@ insert into public.admins (email) values
   ('eli.yosef@knauf.com'),
   ('keren.shay@knauf.com')
 on conflict do nothing;
+
+-- ============================================================
+-- 26.10.2026 — הטופס דורש התחברות: אורח לא קורא ולא כותב כלום
+-- ============================================================
+-- עד היום הטופס בכנס היה פתוח, ולכן אורח יכול היה ליצור ליד ולקרוא כנסים ונציגים.
+-- מעכשיו הנציג מתחבר לפני שהוא מזין ליד, ואורח נשאר רק עם can_login (כדי לבקש קוד).
+-- הפונקציות (meta-webhook, התראות, גיבוי) עובדות עם מפתח השירות ולא מושפעות.
+
+drop policy if exists public_create_leads on public.leads;
+drop policy if exists rep_create_leads    on public.leads;
+create policy rep_create_leads on public.leads
+  for insert to authenticated with check (true);
+
+drop policy if exists read_events on public.events;
+create policy read_events on public.events
+  for select to authenticated using (true);
+
+drop policy if exists read_representatives on public.representatives;
+create policy read_representatives on public.representatives
+  for select to authenticated using (true);
+
+-- בדיקת הכפילות בטופס — רק למחובר. חייבים לשלול גם מ-public, שמקבל execute כברירת מחדל.
+revoke execute on function public.lead_already_exists(text, text) from public, anon;
+grant  execute on function public.lead_already_exists(text, text) to authenticated;

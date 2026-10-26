@@ -85,7 +85,17 @@ async function makeLead(fields) {
   return id;
 }
 
+// נציג הבדיקה חייב להיות רשום ופעיל: פונקציית המייל מאתרת את הנמען מול טבלת הנציגים
+// ומחזירה 422 לכתובת שאינה של נציג פעיל. נמחק בניקוי.
+const TEST_REP_ID = 'rep-test-sandbox';
+let notifyRow = null;
+
 try {
+  const createRep = await service.from('representatives').upsert({
+    id: TEST_REP_ID, name: TEST_REP.name, email: TEST_REP.email, is_active: true, sort_order: 999,
+  });
+  if (createRep.error) throw new Error(`יצירת נציג הבדיקה נכשלה: ${createRep.error.message}`);
+
   // ── שלמות נתונים ─────────────────────────────────────────────────────────
   section('שלמות נתונים');
   const backupFile = readdirSync(join(root, 'backups')).filter((f) => f.startsWith('prod-export')).sort().pop();
@@ -108,10 +118,10 @@ try {
   ok('כל הלידים משויכים למייל של נציג פעיל', (mismatched?.length ?? 0) === 0,
     (mismatched ?? []).map((m) => `${m.assigned_to}: ${m.assigned_email} (${m.n})`).join(', '));
 
-  // ── אורח (הטופס בכנס) ────────────────────────────────────────────────────
-  section('אורח — הטופס בכנס');
-  ok('קורא כנסים', (await guest.from('events').select('id')).data?.length === backup.Event.length);
-  ok('קורא נציגים', (await guest.from('representatives').select('id')).data?.length > 0);
+  // ── אורח (הטופס דורש התחברות מ-26.10.2026) ──────────────────────────────
+  section('אורח — לא רואה ולא כותב כלום');
+  ok('לא קורא כנסים', (await guest.from('events').select('id')).data?.length === 0);
+  ok('לא קורא נציגים', (await guest.from('representatives').select('id')).data?.length === 0);
   ok('לא קורא לידים', (await guest.from('leads').select('id')).data?.length === 0);
 
   const guestLeadId = `preflight-guest-${Math.random().toString(36).slice(2, 7)}`;
@@ -120,16 +130,32 @@ try {
     id: guestLeadId, full_name: 'ליד מהטופס — למחיקה', phone: uniquePhone(),
     event_id: null, assigned_to: TEST_REP.name, assigned_email: TEST_REP.email, is_sample: true,
   });
-  ok('יוצר ליד (ללא התחברות)', !guestInsert.error, guestInsert.error?.message);
-  ok('לא יכול למחוק ליד', Boolean((await guest.from('leads').delete().eq('id', guestLeadId)).error) ||
-    (await service.from('leads').select('id').eq('id', guestLeadId)).data.length === 1);
+  ok('לא יוצר ליד', Boolean(guestInsert.error) &&
+    (await service.from('leads').select('id').eq('id', guestLeadId)).data.length === 0);
+  ok('בדיקת הכפילות חסומה לאורח', Boolean((await guest.rpc('lead_already_exists', { p_phone: '000', p_event_id: null })).error));
+
+  // ── נציג מחובר — הטופס בכנס ──────────────────────────────────────────────
+  section('נציג מחובר — הטופס בכנס');
+  const formClient = await sessionFor(TEST_REP.email);
+  ok('קורא כנסים', (await formClient.from('events').select('id')).data?.length === backup.Event.length);
+  ok('קורא נציגים', (await formClient.from('representatives').select('id')).data?.length > 0);
+
+  const formLeadId = `preflight-form-${Math.random().toString(36).slice(2, 7)}`;
+  createdLeadIds.push(formLeadId);
+  const formInsert = await formClient.from('leads').insert({
+    id: formLeadId, full_name: 'ליד מהטופס — למחיקה', phone: uniquePhone(),
+    event_id: null, assigned_to: OTHER_REP.name, assigned_email: OTHER_REP.email, is_sample: true,
+  });
+  ok('יוצר ליד (גם עבור נציג אחר)', !formInsert.error, formInsert.error?.message);
+  ok('לא יכול למחוק ליד', Boolean((await formClient.from('leads').delete().eq('id', formLeadId)).error) ||
+    (await service.from('leads').select('id').eq('id', formLeadId)).data.length === 1);
 
   const floodPhone = uniquePhone();
   const floodA = `preflight-flood-a-${Math.random().toString(36).slice(2, 6)}`;
   const floodB = `preflight-flood-b-${Math.random().toString(36).slice(2, 6)}`;
   createdLeadIds.push(floodA, floodB);
-  await guest.from('leads').insert({ id: floodA, full_name: 'הצפה א', phone: floodPhone, is_sample: true });
-  const second = await guest.from('leads').insert({ id: floodB, full_name: 'הצפה ב', phone: floodPhone, is_sample: true });
+  await formClient.from('leads').insert({ id: floodA, full_name: 'הצפה א', phone: floodPhone, is_sample: true });
+  const second = await formClient.from('leads').insert({ id: floodB, full_name: 'הצפה ב', phone: floodPhone, is_sample: true });
   ok('שליחה כפולה של אותו מספר נחסמת', Boolean(second.error));
 
   // ── שער ההתחברות ─────────────────────────────────────────────────────────
@@ -140,9 +166,9 @@ try {
   ok('רישיות לא משנה', (await canLogin('ROTEM.HAMEIRI@knauf.com')) === true);
   ok('אדמין מורשה', (await canLogin('keren.shay@knauf.com')) === true);
 
-  await service.from('representatives').update({ is_active: false }).eq('id', 'rep-test-sandbox');
+  await service.from('representatives').update({ is_active: false }).eq('id', TEST_REP_ID);
   ok('נציג שהושבת נחסם', (await canLogin(TEST_REP.email)) === false);
-  await service.from('representatives').update({ is_active: true }).eq('id', 'rep-test-sandbox');
+  await service.from('representatives').update({ is_active: true }).eq('id', TEST_REP_ID);
 
   // ── הפרדה בין נציגים ─────────────────────────────────────────────────────
   section('הפרדת נציגים');
@@ -168,7 +194,9 @@ try {
   ok('אדמין מזוהה ככזה', (await adminClient.rpc('is_admin')).data === true);
   const adminLeads = await adminClient.from('leads').select('id');
   ok('אדמין רואה את כל הלידים', adminLeads.data.length >= backup.Lead.length);
-  ok('אדמין קורא את רשימת המנהלים', (await adminClient.from('admins').select('email')).data?.length === 3);
+  // לא מספר קבוע — מנהלים מתווספים ומוסרים מהממשק
+  const adminList = (await adminClient.from('admins').select('email')).data ?? [];
+  ok('אדמין קורא את רשימת המנהלים', adminList.some((a) => a.email === 'eli.yosef@knauf.com'), JSON.stringify(adminList));
   const grant = await adminClient.from('admins').insert({ email: 'preflight-temp@knauf-test.local' });
   ok('אדמין מעניק הרשאה', !grant.error, grant.error?.message);
   await adminClient.from('admins').delete().eq('email', 'preflight-temp@knauf-test.local');
@@ -176,6 +204,10 @@ try {
 
   // ── הטריגר והמיילים ──────────────────────────────────────────────────────
   section('טריגר ומיילים');
+  // תפוצת ההתראות (CC) כוללת כתובות אמיתיות — מכבים אותה לזמן הבדיקה ומחזירים בניקוי
+  notifyRow = (await service.from('notification_settings').select('id, is_active').limit(1)).data?.[0] ?? null;
+  if (notifyRow?.is_active) await service.from('notification_settings').update({ is_active: false }).eq('id', notifyRow.id);
+
   const before = await runSql('select count(*)::int as n from net._http_response;');
   const triggeredId = await makeLead({
     assigned_to: TEST_REP.name, assigned_email: TEST_REP.email,
@@ -225,7 +257,8 @@ try {
   section('ניקוי');
   for (const id of createdLeadIds) await service.from('leads').delete().eq('id', id);
   await service.from('admins').delete().eq('email', 'preflight-temp@knauf-test.local');
-  await service.from('representatives').update({ is_active: true }).eq('id', 'rep-test-sandbox');
+  await service.from('representatives').delete().eq('id', TEST_REP_ID);
+  if (notifyRow?.is_active) await service.from('notification_settings').update({ is_active: true }).eq('id', notifyRow.id);
   const left = await service.from('leads').select('id').eq('is_sample', true);
   const total = await service.from('leads').select('id');
   console.log(`לידי בדיקה שנותרו: ${left.data?.length ?? '?'} | סה״כ לידים: ${total.data?.length ?? '?'}`);

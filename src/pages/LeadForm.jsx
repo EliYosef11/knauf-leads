@@ -17,6 +17,7 @@ import { translations } from '../lib/i18n';
 import { useLang } from '../hooks/useLang';
 import LangToggle from '../components/LangToggle';
 import UserBadge from '@/components/auth/UserBadge';
+import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
 import { enqueue, flushQueue, pendingCount } from '@/lib/offline-queue';
 
@@ -62,6 +63,15 @@ export default function LeadForm() {
   });
 
   const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
+
+  // הטופס דורש התחברות, ולכן הנציג המחובר הוא ברירת המחדל לנציג המטפל.
+  // אפשר לשנות — נציג יכול להזין ליד עבור חבר לצוות.
+  const { email } = useAuth();
+  useEffect(() => {
+    if (form.assigned_to || !email) return;
+    const me = reps.find((r) => (r.email || '').toLowerCase() === email.toLowerCase());
+    if (me) update('assigned_to', me.name);
+  }, [reps, email, form.assigned_to]);
 
   // When language changes, reset interests (they are language-specific labels)
   const handleLangChange = () => {
