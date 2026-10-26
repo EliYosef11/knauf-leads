@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/AuthContext';
 import { useLang } from '@/hooks/useLang';
+import KnaufLogo from '@/components/lead-form/KnaufLogo';
 
 /**
  * כרטיס ההתחברות — שני שלבים: כתובת מייל, ואז הקוד בן 6 הספרות שנשלח אליה.
@@ -78,7 +79,12 @@ export default function LoginCard({ title, subtitle }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-secondary/30">
+    // הלוגו לבן, ולכן המסך יושב על אותו רקע כחול כמו שאר המסכים
+    <div
+      className="min-h-screen flex flex-col items-center justify-center gap-8 px-6"
+      style={{ background: 'linear-gradient(180deg, #003D7A 0%, #003D7A 35%, #005ba8 55%, #007bc4 75%, #009FE3 100%)' }}
+    >
+      <KnaufLogo size="lg" />
       <div className="text-center max-w-sm w-full bg-card p-8 rounded-3xl shadow-sm border border-border">
         <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
           <Lock className="w-8 h-8 text-primary" />
