@@ -7,10 +7,11 @@
 
 | | |
 |---|---|
-| אתר חי (production) | https://knauf-il-leads.com — **עדיין מוגש מ-Base44**, עם הקוד הישן |
-| הקוד כאן | רץ במלואו על Supabase, בלי שום תלות ב-Base44 |
+| אתר חי (production) | https://knauf-il-leads.com — **המערכת החדשה, מ-26.10.2026** |
+| אירוח | Netlify (אתר `knauf-leads`), תעודת Let's Encrypt עד 24.1.2027 |
+| גיבוי חם | https://knauf-il-leads.base44.app — המערכת הישנה, עדיין חיה |
 | Supabase | `knauf-leads-eu`, ref `eoaxsmjjthkktlhbuenl`, פרנקפורט (eu-central-1) |
-| נשאר לעשות | שלב 4 (פריסה והעברת הדומיין) ושלב 5 (סגירת Base44) — ראה [MIGRATION.md](MIGRATION.md) |
+| נשאר לעשות | הדלקת התזכורות היומיות (דורש טוקן ניהול חדש ל-Supabase), ואז שלב 5 — סגירת Base44 אחרי שבוע יציב |
 
 פרויקט Supabase ישן בסידני (`jiuyfjhvyixgysmknpuf`) עדיין קיים ויימחק בסוף ההגירה;
 אפליקציית Base44 המקורית (`6a15a08fdeebfd8254f3814d`) היא זו שמשרתת את האתר החי.
