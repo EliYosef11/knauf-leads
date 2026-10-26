@@ -5,9 +5,14 @@
 | | |
 |---|---|
 | אירוח | Netlify — אתר `knauf-leads`, חשבון `knauf.il.leads@gmail.com` |
-| כתובת זמנית | https://knauf-leads.netlify.app |
+| כתובת זמנית | https://knauf-leads.netlify.app — **עובדת ונבדקה מקצה לקצה** |
 | דומיין | `knauf-il-leads.com` מחובר לאתר ב-Netlify, **אבל ה-DNS עדיין מצביע ל-Base44** |
 | מסד נתונים | Supabase `knauf-leads-eu` (פרנקפורט) |
+
+צוותים חדשים ב-Netlify נוצרים עם `sso_login = true`, כלומר כל האתרים שלהם
+מוגנים מאחורי התחברות ל-Netlify ומחזירים 401 לגולש רגיל. כובה דרך ה-API
+(ברמת האתר וברמת החשבון). אם אי פעם יופיע שוב 401 עם הכותרת "Login Redirect" —
+זו הסיבה, ולא תקלת פריסה.
 
 ## הצעד שמעביר את האוויר — שינוי רשומת A ב-IONOS
 
