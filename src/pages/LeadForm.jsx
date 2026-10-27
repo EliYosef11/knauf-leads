@@ -17,6 +17,7 @@ import { translations } from '../lib/i18n';
 import { useLang } from '../hooks/useLang';
 import LangToggle from '../components/LangToggle';
 import UserBadge from '@/components/auth/UserBadge';
+import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
 import { enqueue, flushQueue, pendingCount } from '@/lib/offline-queue';
 
@@ -172,16 +173,24 @@ export default function LeadForm() {
     return () => clearInterval(interval);
   }, [success]);
 
+  // כפתור הניהול מוצג רק למנהל. ההגנה האמיתית היא AdminGuard + is_admin() בשרת;
+  // כאן רק לא מציגים לנציג כפתור שממילא ייחסם.
+  const { isAdmin } = useAuth();
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#009FE3' }} dir={t.dir}>
       {/* Top bar with admin link */}
       <div className="absolute top-2 left-2 right-2 z-30 flex justify-between">
-        <Link
-          to="/admin"
-          className="inline-flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white transition-all px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm shadow-md active:scale-95">
-          <Lock className="w-4 h-4" />
-          <span>{t.adminLink}</span>
-        </Link>
+        {isAdmin ? (
+          <Link
+            to="/admin"
+            className="inline-flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white transition-all px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm shadow-md active:scale-95">
+            <Lock className="w-4 h-4" />
+            <span>{t.adminLink}</span>
+          </Link>
+        ) : (
+          <span />
+        )}
         <div className="flex items-center gap-2 flex-wrap justify-end">
           <UserBadge />
           {/* Language switcher */}
