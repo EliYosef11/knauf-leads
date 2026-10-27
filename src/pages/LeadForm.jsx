@@ -375,6 +375,18 @@ export default function LeadForm() {
         <p className="text-center text-xs text-white/60 mt-8">
           {t.footer}
         </p>
+        {/* הודעת פרטיות (GDPR סעיף 13) לאדם שפרטיו נאספים — הנציג מקריא/מראה בעת הצורך */}
+        <p className="text-center text-[11px] leading-relaxed text-white/50 mt-3 max-w-md mx-auto">
+          {t.privacyNotice}{' '}
+          <a
+            href="https://knauf.com/he-IL/privacy-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-white/80"
+          >
+            {t.privacyLink}
+          </a>
+        </p>
         <div className="mt-8 flex justify-center">
           <img
             src="/brand/knauf-statement.png"
