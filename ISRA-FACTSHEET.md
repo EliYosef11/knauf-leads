@@ -1,7 +1,7 @@
 # Knauf Israel – Conference Leads System
 ## Security & Risk Assessment Fact Sheet (for ISRA / RITM0913163)
 
-Prepared for Knauf IT Security. All statements below describe the system as deployed on 2026-10-26.
+Prepared for Knauf IT Security. All statements below describe the system as deployed on 2026-10-27.
 
 ---
 
@@ -11,10 +11,10 @@ Prepared for Knauf IT Security. All statements below describe the system as depl
 |---|---|
 | Name | Knauf Israel Conference Leads ("Knauf Leads") |
 | URL | https://knauf-il-leads.com (also https://www.knauf-il-leads.com) |
-| Purpose | Capture sales leads at trade conferences and events attended by Knauf Israel, assign each lead to a Knauf Israel sales representative, and notify that representative by email. |
-| Business owner | Eli Yosef (yosefe@knauf.com), Knauf Israel |
+| Purpose | Capture sales leads at trade conferences and events attended by Knauf Israel, assign each lead to a Knauf Israel sales representative, and notify that representative by email. It is the first stage of the lead process, before the lead is entered into the CRM; each record tracks whether CRM entry is done. |
+| Business owner | Eli Yosef (eli.yosef@knauf.com), Knauf Israel |
 | Second administrator | Keren Shay, Knauf Israel |
-| Users | Knauf Israel sales representatives (≈ 10 people). Conference visitors fill in a short lead form; they do not log in. |
+| Users | Knauf Israel sales representatives only. Every screen, including the lead form, requires sign-in; there is no public access. |
 | Web category (per Zscaler) | Professional Services |
 | Requested action | Allow access to the domain `knauf-il-leads.com` from Knauf managed devices/network. |
 
@@ -27,7 +27,7 @@ Prepared for Knauf IT Security. All statements below describe the system as depl
 | Registered | May 2026, by Eli Yosef on behalf of Knauf Israel marketing |
 | TLS certificate | Let's Encrypt, auto-renewed, valid (current expiry 2027-01-24) |
 | HTTPS | Enforced; HTTP redirects to HTTPS; HSTS and standard security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy) are set. |
-| Note | The earlier "DGA Domain" classification was a heuristic false positive (new domain). The domain is a legitimate registered domain owned for Knauf Israel use. |
+| Note | A legitimate registered domain operated for Knauf Israel. |
 
 ### 3. Architecture and hosting
 
@@ -48,7 +48,7 @@ No other third parties receive data. There are **no advertising, analytics or tr
 | Representatives | Knauf Israel employees | Name, Knauf email address, phone |
 | Admins | Knauf Israel employees | Knauf email address |
 
-- **Personal data (GDPR):** yes – business contact details of prospects and of Knauf employees. Processing purpose: legitimate interest / pre-contractual sales follow-up. No special-category data. No data on minors.
+- **Personal data (GDPR):** yes – business contact details of prospects (B2B). Lawful basis: legitimate interest / pre-contractual steps. No special-category data. No data on minors. Data-subject requests (access, correction, deletion) are handled by an administrator; full export available.
 - **Data residency:** EU (Frankfurt).
 - **Retention:** leads are retained for sales follow-up; records can be deleted by an administrator at any time. A formal retention period can be set per Knauf policy (recommendation: 24 months after last contact).
 - **Volume:** currently ~55 leads; a few hundred per year expected.
@@ -59,9 +59,9 @@ No other third parties receive data. There are **no advertising, analytics or tr
 |---|---|
 | Representative / admin login | One-time 6-digit code sent to the user's **registered Knauf email address**. No passwords are stored. |
 | Who can log in | Only email addresses pre-registered by an administrator. Any other address is refused before a code is even sent. |
-| Roles | *Representative* – works with leads. *Admin* – additionally manages events, representatives, admin rights, settings and exports. Admin rights are granted/revoked by an existing admin in the Settings screen. |
+| Roles | *Representative* – works with their own leads. *Admin* – additionally manages events, representatives, admin rights, settings and exports. Admin rights are granted/revoked by an existing admin from the representatives screen. |
 | Offboarding | An admin removes the representative; that email can no longer log in. |
-| Public lead form | Anonymous visitors can **only create** a lead. They cannot read, list, modify or delete anything. This is enforced at the database layer (Postgres Row-Level Security), not only in the UI. |
+| Anonymous access | None. A visitor who is not signed in cannot read or create anything; the lead form itself requires sign-in. Enforced at the database layer (Postgres Row-Level Security), not only in the UI. |
 | Server-side enforcement | All authorization checks (admin status, allowed email) run in the database / server functions, not in the browser. |
 | Rate limiting / abuse | Login codes limited per hour; lead submissions are flood-guarded; notification emails can only be sent to registered representatives (the form cannot be used as an open mail relay). |
 
@@ -92,10 +92,10 @@ No other third parties receive data. There are **no advertising, analytics or tr
 
 ### 10. Optional alternative that may simplify approval
 
-Instead of allow-listing the external domain, the system can be served from a Knauf sub-domain, e.g. **`leads.knauf.co.il`**. This requires only one DNS CNAME record created by Knauf IT pointing to the existing hosting; nothing else changes. Hosting under Knauf's own domain removes the external-domain question entirely and improves trust for visitors filling in the form.
+Instead of allow-listing the external domain, the system can be served from a Knauf sub-domain, e.g. **`leads.knauf.com`**. This requires only one DNS CNAME record created by Knauf IT pointing to the existing hosting; nothing else changes. Hosting under Knauf's own domain removes the external-domain question entirely and improves trust for visitors filling in the form.
 
 ### 11. Contacts
 
-- Business owner / system administrator: Eli Yosef – yosefe@knauf.com
+- Business owner / system administrator: Eli Yosef – eli.yosef@knauf.com
 - Second administrator: Keren Shay – Knauf Israel
 - Hosting/technical documentation: available on request.
