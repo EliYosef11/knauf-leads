@@ -1,0 +1,17 @@
+Subject: RITM0913163 – ISRA Risk Acceptance Document for knauf-il-leads.com (Knauf Israel)
+
+Hi Satish,
+
+Following your note on RITM0913163, please find attached the completed Information Security Risk Acceptance Document (ISRAD) for the Knauf Israel Conference Leads application at knauf-il-leads.com, together with a security fact sheet describing the system (hosting, data, access control, backups).
+
+Summary of the request:
+- Allow access to knauf-il-leads.com and www.knauf-il-leads.com from Knauf-managed devices for Knauf Israel users.
+- The application is company-owned, used by Knauf Israel sales representatives to capture conference leads as the first stage before CRM entry. It requires sign-in, holds only B2B business contact details, is hosted in the EU (Frankfurt), and has no connection to any Knauf system.
+- Risk rating assessed as Low; the business-unit signature is in section 10.
+
+Could you please route the ISRAD to the Security Service Design Lead for review, and let me know if anything further is needed from my side?
+
+Many thanks,
+Eli Yosef
+Knauf Israel
+eli.yosef@knauf.com

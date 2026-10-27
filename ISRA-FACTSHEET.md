@@ -49,6 +49,7 @@ No other third parties receive data. There are **no advertising, analytics or tr
 | Admins | Knauf Israel employees | Knauf email address |
 
 - **Personal data (GDPR):** yes – business contact details of prospects (B2B). Lawful basis: legitimate interest / pre-contractual steps. No special-category data. No data on minors. Data-subject requests (access, correction, deletion) are handled by an administrator; full export available.
+- **Privacy notice:** shown on the lead form (purpose, EU storage, retention, rights), linking to the Knauf privacy policy at knauf.com/he-IL/privacy-policy.
 - **Data residency:** EU (Frankfurt).
 - **Retention:** leads are retained for sales follow-up; records can be deleted by an administrator at any time. A formal retention period can be set per Knauf policy (recommendation: 24 months after last contact).
 - **Volume:** currently ~55 leads; a few hundred per year expected.
