@@ -56,8 +56,9 @@ export default function LoginCard({ title, subtitle }) {
     setBusy(true);
     setError('');
     try {
-      await sendCode(email);
-      setCodeSent(true);
+      const result = await sendCode(email);
+      // במצב חירום הסשן כבר נוצר — AuthContext יעביר אותנו הלאה, אין שלב קוד
+      if (!result?.direct) setCodeSent(true);
     } catch (sendError) {
       setError(sendError.message || t.errorSend);
     } finally {

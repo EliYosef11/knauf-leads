@@ -79,6 +79,13 @@ const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/config/auth
     // ולכן נשבר בכל סביבה שאינה הפרודקשן. התבנית כאן מציגה את הקוד עצמו.
     mailer_subjects_magic_link: 'קוד הכניסה שלך למערכת הלידים',
     mailer_templates_magic_link_content: LOGIN_CODE_TEMPLATE,
+    // 28.10.2026: נציג שנכנס בפעם הראשונה הוא "הרשמה" מבחינת Supabase ומקבל תבנית
+    // אחרת — ברירת המחדל באנגלית עם קישור, שסינון הדואר של קנאוף זורק. אותה תבנית
+    // של קוד גם כאן, וגם להזמנה ליתר ביטחון.
+    mailer_subjects_confirmation: 'קוד הכניסה שלך למערכת הלידים',
+    mailer_templates_confirmation_content: LOGIN_CODE_TEMPLATE,
+    mailer_subjects_invite: 'קוד הכניסה שלך למערכת הלידים',
+    mailer_templates_invite_content: LOGIN_CODE_TEMPLATE,
 
     site_url: 'https://knauf-il-leads.com',
     uri_allow_list: 'http://localhost:5173,http://localhost:5173/**,https://knauf-il-leads.com/**',
@@ -102,4 +109,6 @@ console.log('הוגדר:', {
   rateLimitPerHour: config.rate_limit_email_sent,
   otpLength: config.mailer_otp_length,
   templateShowsCode: config.mailer_templates_magic_link_content.includes('{{ .Token }}'),
+  signupTemplateShowsCode: config.mailer_templates_confirmation_content.includes('{{ .Token }}'),
+  signupSubject: config.mailer_subjects_confirmation,
 });

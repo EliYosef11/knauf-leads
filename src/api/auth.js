@@ -48,16 +48,33 @@ export const auth = {
     return data === true;
   },
 
+  /**
+   * מצב חירום (28.10.2026): כניסה ישירה בלי קוד, אם פונקציית direct-login דולקת
+   * בשרת. מחזיר את הסשן, או null כשהמצב כבוי (ואז ממשיכים לקוד במייל כרגיל).
+   */
+  async tryDirectLogin(email) {
+    const normalized = email.trim().toLowerCase();
+    const { data, error } = await supabase.functions.invoke('direct-login', { body: { email: normalized } });
+    if (error || !data?.ok || !data?.token) return null;
+    const verified = await supabase.auth.verifyOtp({ email: normalized, token: data.token, type: 'email' });
+    if (verified.error) return null;
+    return verified.data.session;
+  },
+
+  /** מחזיר { direct: true } אם כבר התחברנו בלי קוד, אחרת { direct: false } ונשלח קוד */
   async sendCode(email) {
     if (!(await auth.canLogin(email))) {
       throw new Error('הכתובת הזו אינה רשומה כנציג במערכת. פנה למנהל המערכת.');
     }
+
+    if (await auth.tryDirectLogin(email)) return { direct: true };
 
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
       options: { shouldCreateUser: true },
     });
     if (error) throw describe(error, 'שליחת הקוד נכשלה.');
+    return { direct: false };
   },
 
   async verifyCode(email, token) {
