@@ -128,89 +128,94 @@ function MyLeadsContent() {
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
         {/* סרגל סינון בשורה אחת. שם הנציג הוסר — הוא רואה רק את שלו ממילא.
             הערכים עצמם ("כל הכנסים", "כל הסטטוסים") משמשים כתווית, אז אין צורך בכותרות. */}
-        <div className="bg-card border border-border rounded-2xl px-4 py-3 flex flex-wrap items-center gap-2">
-          {/* מעבר בין תצוגה מפורטת (כרטיסים) לרשימה קומפקטית */}
-          <div className="inline-flex rounded-lg border border-border overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setViewPersisted('detailed')}
-              title={t.viewDetailed}
-              className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium transition-colors ${
-                view === 'detailed' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-secondary'
-              }`}
-            >
-              <LayoutList className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t.viewDetailed}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewPersisted('list')}
-              title={t.viewList}
-              className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium transition-colors border-s border-border ${
-                view === 'list' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-secondary'
-              }`}
-            >
-              <Rows3 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t.viewList}</span>
-            </button>
-          </div>
-          {availableEvents.length > 0 && (
-            <>
-              <Select value={selectedEvent} onValueChange={setSelectedEvent}>
-                <SelectTrigger className="h-9 w-auto min-w-[9rem] text-sm" dir="rtl">
-                  <SelectValue placeholder={t.allEventsPlaceholder} />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  <SelectItem value="all">{t.allEventsPlaceholder}</SelectItem>
-                  {availableEvents.map(e => (
-                    <SelectItem key={e} value={e}>{e}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="h-9 w-auto min-w-[8rem] text-sm" dir="rtl">
-                  <SelectValue placeholder={t.allStatuses} />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  <SelectItem value="all">{t.allStatuses}</SelectItem>
-                  <SelectItem value="טרם טופל">{t.statusPending}</SelectItem>
-                  <SelectItem value="טופל">{t.statusDone}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filterQuality} onValueChange={setFilterQuality}>
-                <SelectTrigger className="h-9 w-auto min-w-[8rem] text-sm" dir="rtl">
-                  <SelectValue placeholder={t.qualityLead} />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  <SelectItem value="all">{t.qualityLead}</SelectItem>
-                  <SelectItem value="quality">{t.qualityOnly}</SelectItem>
-                  <SelectItem value="not_quality">{t.notQuality}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filterCrm} onValueChange={setFilterCrm}>
-                <SelectTrigger className="h-9 w-auto min-w-[8rem] text-sm" dir="rtl">
-                  <SelectValue placeholder={t.crmEntered} />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  <SelectItem value="all">{t.crmEntered}</SelectItem>
-                  <SelectItem value="crm">{t.crmYes}</SelectItem>
-                  <SelectItem value="not_crm">{t.crmNo}</SelectItem>
-                </SelectContent>
-              </Select>
-            </>
-          )}
-
+        <div className="bg-card border border-border rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          {/* הסיכום בצד ימין */}
           {leads.length > 0 && (
-            <div className="flex items-center gap-3 text-xs text-muted-foreground ms-auto">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <span>{t.totalLabel}: <strong className="text-foreground">{filtered.length}</strong></span>
               <span>{t.qualityLabel}: <strong className="text-amber-500">{filtered.filter(l => l.is_quality).length}</strong></span>
               <span>{t.doneLabel}: <strong className="text-green-600">{filtered.filter(l => l.status === 'טופל').length}</strong></span>
-              <Button onClick={exportToCsv} variant="outline" size="sm" className="gap-1.5 h-8">
+            </div>
+          )}
+
+          {/* פקדים: מתג תצוגה, סינון וייצוא — הכול באותה שורה */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-lg border border-border overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setViewPersisted('detailed')}
+                title={t.viewDetailed}
+                className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium transition-colors ${
+                  view === 'detailed' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-secondary'
+                }`}
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{t.viewDetailed}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewPersisted('list')}
+                title={t.viewList}
+                className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium transition-colors border-s border-border ${
+                  view === 'list' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-secondary'
+                }`}
+              >
+                <Rows3 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{t.viewList}</span>
+              </button>
+            </div>
+            {availableEvents.length > 0 && (
+              <>
+                <Select value={selectedEvent} onValueChange={setSelectedEvent}>
+                  <SelectTrigger className="h-9 w-auto min-w-[7.5rem] text-sm" dir="rtl">
+                    <SelectValue placeholder={t.allEventsPlaceholder} />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="all">{t.allEventsPlaceholder}</SelectItem>
+                    {availableEvents.map(e => (
+                      <SelectItem key={e} value={e}>{e}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="h-9 w-auto min-w-[6.5rem] text-sm" dir="rtl">
+                    <SelectValue placeholder={t.allStatuses} />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="all">{t.allStatuses}</SelectItem>
+                    <SelectItem value="טרם טופל">{t.statusPending}</SelectItem>
+                    <SelectItem value="טופל">{t.statusDone}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterQuality} onValueChange={setFilterQuality}>
+                  <SelectTrigger className="h-9 w-auto min-w-[6.5rem] text-sm" dir="rtl">
+                    <SelectValue placeholder={t.qualityLead} />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="all">{t.qualityLead}</SelectItem>
+                    <SelectItem value="quality">{t.qualityOnly}</SelectItem>
+                    <SelectItem value="not_quality">{t.notQuality}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterCrm} onValueChange={setFilterCrm}>
+                  <SelectTrigger className="h-9 w-auto min-w-[6.5rem] text-sm" dir="rtl">
+                    <SelectValue placeholder={t.crmEntered} />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="all">{t.crmEntered}</SelectItem>
+                    <SelectItem value="crm">{t.crmYes}</SelectItem>
+                    <SelectItem value="not_crm">{t.crmNo}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+            {leads.length > 0 && (
+              <Button onClick={exportToCsv} variant="outline" size="sm" className="gap-1.5 h-9">
                 <Download className="w-3.5 h-3.5" />
                 {t.exportCsv}
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {isLoading ? (
