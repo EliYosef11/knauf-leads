@@ -140,6 +140,8 @@ export const translations = {
     noLeadsFilter: 'לא נמצאו לידים התואמים לסינון',
     summaryLabel: 'סיכום',
     notesLabel: 'הערות',
+    viewDetailed: 'מפורט',
+    viewList: 'רשימה',
     // RepresentativesManager
     repsTitle: 'ניהול נציגים',
     repsSubtitle: 'כל נציג מקבל אוטומטית את הלידים שמשויכים אליו',
@@ -354,5 +356,7 @@ export const translations = {
     noLeadsFilter: 'No leads match the filter',
     summaryLabel: 'Summary',
     notesLabel: 'Notes',
+    viewDetailed: 'Detailed',
+    viewList: 'List',
   }
 };

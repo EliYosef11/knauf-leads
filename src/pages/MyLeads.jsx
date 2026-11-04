@@ -5,7 +5,8 @@ import { db } from '@/api/db';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Star, CheckCircle2, Clock, Loader2, Phone, Mail, Cloud, Download, ArrowLeftRight } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ArrowRight, Star, CheckCircle2, Clock, Loader2, Phone, Mail, Cloud, Download, ArrowLeftRight, LayoutList, Rows3 } from 'lucide-react';
 import { format } from 'date-fns';
 import KnaufLogo from '../components/lead-form/KnaufLogo';
 import { useLang } from '../hooks/useLang';
@@ -23,6 +24,16 @@ function MyLeadsContent() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterQuality, setFilterQuality] = useState('all');
   const [filterCrm, setFilterCrm] = useState('all');
+  // 'detailed' = כרטיסים (ברירת מחדל), 'list' = רשימה קומפקטית כמו במסך הניהול
+  const [view, setView] = useState(() => {
+    try { return localStorage.getItem('knauf_my_leads_view') === 'list' ? 'list' : 'detailed'; }
+    catch { return 'detailed'; }
+  });
+  const [openLead, setOpenLead] = useState(null);
+  const setViewPersisted = (v) => {
+    setView(v);
+    try { localStorage.setItem('knauf_my_leads_view', v); } catch { /* מצב פרטי */ }
+  };
 
   const { lang, toggle } = useLang();
   const t = translations[lang];
@@ -118,6 +129,31 @@ function MyLeadsContent() {
         {/* סרגל סינון בשורה אחת. שם הנציג הוסר — הוא רואה רק את שלו ממילא.
             הערכים עצמם ("כל הכנסים", "כל הסטטוסים") משמשים כתווית, אז אין צורך בכותרות. */}
         <div className="bg-card border border-border rounded-2xl px-4 py-3 flex flex-wrap items-center gap-2">
+          {/* מעבר בין תצוגה מפורטת (כרטיסים) לרשימה קומפקטית */}
+          <div className="inline-flex rounded-lg border border-border overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setViewPersisted('detailed')}
+              title={t.viewDetailed}
+              className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium transition-colors ${
+                view === 'detailed' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-secondary'
+              }`}
+            >
+              <LayoutList className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t.viewDetailed}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewPersisted('list')}
+              title={t.viewList}
+              className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium transition-colors border-s border-border ${
+                view === 'list' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-secondary'
+              }`}
+            >
+              <Rows3 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t.viewList}</span>
+            </button>
+          </div>
           {availableEvents.length > 0 && (
             <>
               <Select value={selectedEvent} onValueChange={setSelectedEvent}>
@@ -185,6 +221,8 @@ function MyLeadsContent() {
           <div className="text-center py-20 border border-dashed border-border rounded-2xl text-muted-foreground">
             {t.noLeads}
           </div>
+        ) : view === 'list' ? (
+          <MyLeadsList leads={filtered} t={t} onSelect={setOpenLead} />
         ) : (
           <div className="space-y-3">
             {filtered.map(lead => (
@@ -193,6 +231,71 @@ function MyLeadsContent() {
           </div>
         )}
       </main>
+
+      {/* ברשימה — לחיצה על שורה פותחת את אותו כרטיס מלא (עריכה + שיחה) */}
+      <Dialog open={!!openLead} onOpenChange={(o) => !o && setOpenLead(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 bg-transparent border-0 shadow-none">
+          {openLead && <LeadCard lead={openLead} t={t} selectedRep={myName} />}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/** רשימה קומפקטית של הלידים של הנציג — אותו רעיון כמו טבלת המנהל, בלי עמודת "לטיפול". */
+function MyLeadsList({ leads, t, onSelect }) {
+  return (
+    <div className="overflow-hidden border border-border rounded-2xl bg-card">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm table-auto" dir="rtl">
+          <thead className="bg-secondary/40">
+            <tr className="text-right text-xs uppercase tracking-wider text-muted-foreground">
+              <th className="px-3 py-3 font-semibold w-1 whitespace-nowrap">{t.colStatus || 'טיפול'}</th>
+              <th className="px-3 py-3 font-semibold">{t.colFullName || 'שם מלא'}</th>
+              <th className="px-1 py-3 font-semibold">{t.colCompany || 'חברה'}</th>
+              <th className="px-3 py-3 font-semibold hidden sm:table-cell">{t.filterByEvent || 'כנס'}</th>
+              <th className="px-3 py-3 font-semibold w-1 whitespace-nowrap">{t.colQuality || 'איכותי'}</th>
+              <th className="px-3 py-3 font-semibold w-1 whitespace-nowrap">{t.colCrm || 'CRM'}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {leads.map(lead => (
+              <tr
+                key={lead.id}
+                onClick={() => onSelect(lead)}
+                className="hover:bg-secondary/40 transition-colors cursor-pointer"
+              >
+                <td className="px-3 py-3.5 w-1 whitespace-nowrap">
+                  {lead.status === 'טופל' ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                      <CheckCircle2 className="w-3 h-3" />{t.statusDone || 'טופל'}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-secondary border border-border px-2 py-0.5 rounded-full">
+                      <Clock className="w-3 h-3" />{t.statusPending || 'טרם טופל'}
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-3.5 font-semibold text-foreground">{lead.full_name || '—'}</td>
+                <td className="px-1 py-3.5 text-foreground/80">{lead.company || '—'}</td>
+                <td className="px-3 py-3.5 text-muted-foreground text-xs hidden sm:table-cell">{lead.event_name || '—'}</td>
+                <td className="px-3 py-3.5 w-1 whitespace-nowrap">
+                  {lead.is_quality && (
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  )}
+                </td>
+                <td className="px-3 py-3.5 w-1 whitespace-nowrap">
+                  {lead.crm_entered && (
+                    <span className="inline-flex items-center gap-1 text-xs text-white bg-blue-600 border border-blue-600 px-2 py-0.5 rounded-full">
+                      <Cloud className="w-3 h-3" />CRM
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
