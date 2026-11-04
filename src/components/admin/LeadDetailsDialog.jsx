@@ -10,6 +10,7 @@ import { invokeFunction } from '@/api/functions';
 import { db } from '@/api/db';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import InterestSelector from '../lead-form/InterestSelector';
+import LeadThread from '../lead-form/LeadThread';
 
 const ROLES = ["אדריכל/ית", "קבלן/ית", "מפקח/ית", "יזם/ית", "מעצב/ת פנים", "מהנדס/ת", "מנהל/ת פרויקט", "יועץ/ת", "פרטי", "אחר"];
 
@@ -97,6 +98,7 @@ export default function LeadDetailsDialog({ lead, onClose, t = {} }) {
             {lead.created_date && (
               <p className="text-sm text-muted-foreground mt-1">
                 {t.createdLabel || 'נוצר'}: {(() => { const s = String(lead.created_date); const d = new Date(s.endsWith('Z') || s.includes('+') ? s : s + 'Z'); return d.toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); })()}
+                {lead.created_by && <span className="text-muted-foreground/80"> · {t.enteredBy || 'הוזן ע"י'} {lead.created_by}</span>}
               </p>
             )}
           </div>
@@ -153,14 +155,7 @@ export default function LeadDetailsDialog({ lead, onClose, t = {} }) {
                 </div>
               </div>
             )}
-            {lead.lead_summary && (
-              <div>
-                <div className="text-muted-foreground mb-2">{t.labelMeetingSummary || 'סיכום שיחה / פגישה'}</div>
-                <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 whitespace-pre-wrap leading-relaxed">
-                  {lead.lead_summary}
-                </div>
-              </div>
-            )}
+            <LeadThread leadId={lead.id} compact onChanged={() => queryClient.invalidateQueries({ queryKey: ['leads'] })} />
             {Array.isArray(lead.reminder_log) && lead.reminder_log.length > 0 && (
               <div>
                 <div className="text-muted-foreground mb-2">היסטוריית תזכורות</div>

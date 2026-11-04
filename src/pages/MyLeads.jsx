@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/db';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Star, CheckCircle2, Clock, Loader2, Phone, Mail, Cloud, Download, ArrowLeftRight } from 'lucide-react';
 import { format } from 'date-fns';
@@ -13,6 +12,7 @@ import { useLang } from '../hooks/useLang';
 import { translations } from '../lib/i18n';
 import LangToggle from '../components/LangToggle';
 import TransferLeadDialog from '../components/lead-form/TransferLeadDialog';
+import LeadThread from '../components/lead-form/LeadThread';
 import { useAuth } from '@/lib/AuthContext';
 import LoginCard from '@/components/auth/LoginCard';
 import UserBadge from '@/components/auth/UserBadge';
@@ -223,22 +223,11 @@ function MyLeadsContent() {
 
 function LeadCard({ lead, t, selectedRep }) {
   const queryClient = useQueryClient();
-  const [summary, setSummary] = useState(lead.lead_summary || '');
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
 
   const update = async (data) => {
     await db.Lead.update(lead.id, data);
     queryClient.invalidateQueries({ queryKey: ['my-leads'] });
-  };
-
-  const saveSummary = async () => {
-    setSaving(true);
-    await update({ lead_summary: summary });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   };
 
   const toggleQuality = () => update({ is_quality: !lead.is_quality });
@@ -267,6 +256,9 @@ function LeadCard({ lead, t, selectedRep }) {
            {lead.city && <span className="text-sm text-muted-foreground">{lead.city}</span>}
            {lead.event_name && <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">{lead.event_name}</span>}
            <span className="text-xs">{lead.created_date ? format(new Date(lead.created_date), 'dd/MM/yyyy') : ''}</span>
+           {lead.created_by && (
+             <span className="text-[11px] text-muted-foreground/80">{t.enteredBy} {lead.created_by}</span>
+           )}
          </div>
 
 
@@ -374,28 +366,7 @@ function LeadCard({ lead, t, selectedRep }) {
         </div>
       )}
 
-      <div className="space-y-2">
-        <div>
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t.meetingSummary}</label>
-          <p className="text-xs text-muted-foreground mt-0.5">{t.meetingSummaryHint}</p>
-        </div>
-        <Textarea
-          value={summary}
-          onChange={e => setSummary(e.target.value)}
-          placeholder={t.summaryPlaceholder}
-          className="min-h-[80px] text-sm resize-none"
-        />
-        <div className="flex justify-end">
-          <Button
-            size="sm"
-            variant={saved ? "secondary" : "default"}
-            onClick={saveSummary}
-            disabled={saving || summary === (lead.lead_summary || '')}
-          >
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? t.savedLabel : t.saveBtn}
-          </Button>
-        </div>
-      </div>
+      <LeadThread leadId={lead.id} onChanged={() => queryClient.invalidateQueries({ queryKey: ['my-leads'] })} />
     </div>
   );
 }

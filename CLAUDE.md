@@ -39,7 +39,12 @@ npm run dev      # Vite על 5173, מדבר ישירות עם Supabase
 - `base44/` — **עותק ייחוס בלבד** של המקור. שום קוד חי לא מייבא ממנה.
 
 ### טבלאות
-`leads`, `events`, `representatives`, `campaigns`, `notification_settings`, `admins`.
+`leads`, `events`, `representatives`, `campaigns`, `notification_settings`, `admins`, `lead_notes`.
+- **מי הזין** (4.11.2026): טריגר `set_lead_author` ממלא `created_by`/`created_by_id` מה-JWT בכל
+  INSERT מחובר. לידים ישנים (Base44 + 28.10–3.11) — לא ידוע, ולא מציגים.
+- **שיחה על ליד** (`lead_notes`, [supabase/notes.sql](supabase/notes.sql)): כל עדכון הוא הודעה עם
+  כותב (נקבע בשרת) ותאריך. `leads.lead_summary` נשאר רק לתאימות (ייצוא CSV) ומסונכרן מהשיחה
+  בטריגר — **לא כותבים אליו ישירות**. הסיכומים הישנים הוגרו כהודעה ראשונה על שם הנציג המשויך.
 המזהים הם ה-ids המקוריים של Base44 (text), כך ש-`leads.event_id` ממשיך להצביע נכון.
 שדות ה-enum בעברית הם text חופשי — הנתונים האמיתיים מכילים ערכים שלא היו בסכמה
 של Base44 (`אדריכל/ית` מול `אדריכל`), ו-CHECK היה מפיל את הייבוא.
