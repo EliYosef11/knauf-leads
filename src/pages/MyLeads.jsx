@@ -115,89 +115,65 @@ function MyLeadsContent() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
-        <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">{t.selectYourName}</label>
-              <div className="flex h-11 w-full items-center rounded-md border border-input bg-secondary/30 px-3 text-base" dir="rtl">
-                <span className={myRep ? 'text-foreground font-semibold' : 'text-muted-foreground'}>
-                  {myRep ? myRep.name : email}
-                </span>
-              </div>
-            </div>
-            {availableEvents.length > 0 && (
-              <>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">{t.filterByEvent}</label>
-                  <Select value={selectedEvent} onValueChange={setSelectedEvent}>
-                    <SelectTrigger className="h-11" dir="rtl">
-                      <SelectValue placeholder={t.allEventsPlaceholder} />
-                    </SelectTrigger>
-                    <SelectContent dir="rtl">
-                      <SelectItem value="all">{t.allEventsPlaceholder}</SelectItem>
-                      {availableEvents.map(e => (
-                        <SelectItem key={e} value={e}>{e}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">{t.status}</label>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="h-11" dir="rtl">
-                      <SelectValue placeholder={t.allStatuses} />
-                    </SelectTrigger>
-                    <SelectContent dir="rtl">
-                      <SelectItem value="all">{t.allStatuses}</SelectItem>
-                      <SelectItem value="טרם טופל">{t.statusPending}</SelectItem>
-                      <SelectItem value="טופל">{t.statusDone}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">{t.qualityLead}</label>
-                  <Select value={filterQuality} onValueChange={setFilterQuality}>
-                    <SelectTrigger className="h-11" dir="rtl">
-                      <SelectValue placeholder={t.allLabel} />
-                    </SelectTrigger>
-                    <SelectContent dir="rtl">
-                      <SelectItem value="all">{t.allLabel}</SelectItem>
-                      <SelectItem value="quality">{t.qualityOnly}</SelectItem>
-                      <SelectItem value="not_quality">{t.notQuality}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">{t.crmEntered}</label>
-                  <Select value={filterCrm} onValueChange={setFilterCrm}>
-                    <SelectTrigger className="h-11" dir="rtl">
-                      <SelectValue placeholder={t.allLabel} />
-                    </SelectTrigger>
-                    <SelectContent dir="rtl">
-                      <SelectItem value="all">{t.allLabel}</SelectItem>
-                      <SelectItem value="crm">{t.crmYes}</SelectItem>
-                      <SelectItem value="not_crm">{t.crmNo}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
-            )}
-          </div>
+        {/* סרגל סינון בשורה אחת. שם הנציג הוסר — הוא רואה רק את שלו ממילא.
+            הערכים עצמם ("כל הכנסים", "כל הסטטוסים") משמשים כתווית, אז אין צורך בכותרות. */}
+        <div className="bg-card border border-border rounded-2xl px-4 py-3 flex flex-wrap items-center gap-2">
+          {availableEvents.length > 0 && (
+            <>
+              <Select value={selectedEvent} onValueChange={setSelectedEvent}>
+                <SelectTrigger className="h-9 w-auto min-w-[9rem] text-sm" dir="rtl">
+                  <SelectValue placeholder={t.allEventsPlaceholder} />
+                </SelectTrigger>
+                <SelectContent dir="rtl">
+                  <SelectItem value="all">{t.allEventsPlaceholder}</SelectItem>
+                  {availableEvents.map(e => (
+                    <SelectItem key={e} value={e}>{e}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="h-9 w-auto min-w-[8rem] text-sm" dir="rtl">
+                  <SelectValue placeholder={t.allStatuses} />
+                </SelectTrigger>
+                <SelectContent dir="rtl">
+                  <SelectItem value="all">{t.allStatuses}</SelectItem>
+                  <SelectItem value="טרם טופל">{t.statusPending}</SelectItem>
+                  <SelectItem value="טופל">{t.statusDone}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterQuality} onValueChange={setFilterQuality}>
+                <SelectTrigger className="h-9 w-auto min-w-[8rem] text-sm" dir="rtl">
+                  <SelectValue placeholder={t.qualityLead} />
+                </SelectTrigger>
+                <SelectContent dir="rtl">
+                  <SelectItem value="all">{t.qualityLead}</SelectItem>
+                  <SelectItem value="quality">{t.qualityOnly}</SelectItem>
+                  <SelectItem value="not_quality">{t.notQuality}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterCrm} onValueChange={setFilterCrm}>
+                <SelectTrigger className="h-9 w-auto min-w-[8rem] text-sm" dir="rtl">
+                  <SelectValue placeholder={t.crmEntered} />
+                </SelectTrigger>
+                <SelectContent dir="rtl">
+                  <SelectItem value="all">{t.crmEntered}</SelectItem>
+                  <SelectItem value="crm">{t.crmYes}</SelectItem>
+                  <SelectItem value="not_crm">{t.crmNo}</SelectItem>
+                </SelectContent>
+              </Select>
+            </>
+          )}
 
           {leads.length > 0 && (
-            <>
-              <div className="flex gap-4 pt-2 border-t border-border text-sm text-muted-foreground flex-wrap">
-                <span>{t.totalLabel}: <strong className="text-foreground">{filtered.length}</strong></span>
-                <span>{t.qualityLabel}: <strong className="text-amber-500">{filtered.filter(l => l.is_quality).length}</strong></span>
-                <span>{t.doneLabel}: <strong className="text-green-600">{filtered.filter(l => l.status === 'טופל').length}</strong></span>
-              </div>
-              <div className="flex gap-2 pt-2 border-t border-border flex-wrap">
-                <Button onClick={exportToCsv} variant="outline" size="sm" className="gap-1.5">
-                  <Download className="w-4 h-4" />
-                  {t.exportCsv}
-                </Button>
-              </div>
-            </>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground ms-auto">
+              <span>{t.totalLabel}: <strong className="text-foreground">{filtered.length}</strong></span>
+              <span>{t.qualityLabel}: <strong className="text-amber-500">{filtered.filter(l => l.is_quality).length}</strong></span>
+              <span>{t.doneLabel}: <strong className="text-green-600">{filtered.filter(l => l.status === 'טופל').length}</strong></span>
+              <Button onClick={exportToCsv} variant="outline" size="sm" className="gap-1.5 h-8">
+                <Download className="w-3.5 h-3.5" />
+                {t.exportCsv}
+              </Button>
+            </div>
           )}
         </div>
 
