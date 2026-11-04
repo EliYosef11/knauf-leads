@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/db';
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { ArrowRight, Star, CheckCircle2, Clock, Loader2, Phone, Mail, Cloud, Download, ArrowLeftRight, LayoutList, Rows3 } from 'lucide-react';
+import { ArrowRight, Star, CheckCircle2, Clock, Loader2, Phone, Mail, Cloud, Download, ArrowLeftRight, LayoutList, Rows3, HelpCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import KnaufLogo from '../components/lead-form/KnaufLogo';
 import { useLang } from '../hooks/useLang';
@@ -14,6 +14,7 @@ import { translations } from '../lib/i18n';
 import LangToggle from '../components/LangToggle';
 import TransferLeadDialog from '../components/lead-form/TransferLeadDialog';
 import LeadThread from '../components/lead-form/LeadThread';
+import QuickTour from '../components/tour/QuickTour';
 import { useAuth } from '@/lib/AuthContext';
 import LoginCard from '@/components/auth/LoginCard';
 import UserBadge from '@/components/auth/UserBadge';
@@ -37,6 +38,14 @@ function MyLeadsContent() {
 
   const { lang, toggle } = useLang();
   const t = translations[lang];
+
+  // הסיור המודרך נפתח לבד בכניסה הראשונה (לכל משתמש, במכשיר הזה); אפשר לפתוח שוב מכפתור ה-?
+  const tourKey = `knauf_tour_my_leads_v1:${(email || '').toLowerCase()}`;
+  const [tourOpen, setTourOpen] = useState(false);
+  const closeTour = (dontShowAgain) => {
+    setTourOpen(false);
+    try { if (dontShowAgain) localStorage.setItem(tourKey, 'done'); } catch { /* מצב פרטי */ }
+  };
 
   const { data: reps = [] } = useQuery({
     queryKey: ['reps-active'],
@@ -62,6 +71,18 @@ function MyLeadsContent() {
     () => allLeads.filter(l => (l.assigned_email || '').toLowerCase() === (email || '').toLowerCase()),
     [allLeads, email],
   );
+
+  useEffect(() => {
+    if (isLoading || !email) return;
+    try {
+      if (localStorage.getItem(tourKey) !== 'done') {
+        // רגע אחרי הרינדור, כדי שהכרטיס הראשון כבר יהיה במסך
+        const id = setTimeout(() => setTourOpen(true), 400);
+        return () => clearTimeout(id);
+      }
+    } catch { /* מצב פרטי — פשוט לא מציגים */ }
+    return undefined;
+  }, [isLoading, email, tourKey]);
 
   const availableEvents = useMemo(() => {
     return Array.from(new Set(leads.map(l => l.event_name).filter(Boolean))).sort();
@@ -130,7 +151,7 @@ function MyLeadsContent() {
             הערכים עצמם ("כל הכנסים", "כל הסטטוסים") משמשים כתווית, אז אין צורך בכותרות. */}
         <div className="bg-card border border-border rounded-2xl px-4 py-3 flex flex-col gap-2">
           {/* שורת הפקדים: סינון, ייצוא, ואחריהם מתג התצוגה */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2" data-tour="toolbar">
             {availableEvents.length > 0 && (
               <>
                 <Select value={selectedEvent} onValueChange={setSelectedEvent}>
@@ -182,7 +203,7 @@ function MyLeadsContent() {
                 {t.exportCsv}
               </Button>
             )}
-            <div className="inline-flex rounded-lg border border-border overflow-hidden">
+            <div className="inline-flex rounded-lg border border-border overflow-hidden" data-tour="view">
               <button
                 type="button"
                 onClick={() => setViewPersisted('detailed')}
@@ -206,11 +227,20 @@ function MyLeadsContent() {
                 <span className="hidden sm:inline">{t.viewList}</span>
               </button>
             </div>
+            <button
+              type="button"
+              onClick={() => setTourOpen(true)}
+              title={t.tourHelp}
+              aria-label={t.tourHelp}
+              className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
           </div>
 
           {/* הסיכום מתחת לסינון */}
           {leads.length > 0 && (
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground" data-tour="summary">
               <span>{t.totalLabel}: <strong className="text-foreground">{filtered.length}</strong></span>
               <span>{t.qualityLabel}: <strong className="text-amber-500">{filtered.filter(l => l.is_quality).length}</strong></span>
               <span>{t.doneLabel}: <strong className="text-green-600">{filtered.filter(l => l.status === 'טופל').length}</strong></span>
@@ -230,12 +260,27 @@ function MyLeadsContent() {
           <MyLeadsList leads={filtered} t={t} onSelect={setOpenLead} />
         ) : (
           <div className="space-y-3">
-            {filtered.map(lead => (
-              <LeadCard key={lead.id} lead={lead} t={t} selectedRep={myName} />
+            {filtered.map((lead, i) => (
+              <LeadCard key={lead.id} lead={lead} t={t} selectedRep={myName} tourTarget={i === 0} />
             ))}
           </div>
         )}
       </main>
+
+      <QuickTour
+        open={tourOpen}
+        onClose={closeTour}
+        t={{ next: t.tourNext, back: t.tourBack, finish: t.tourFinish, close: t.tourClose, dontShowAgain: t.tourDontShow }}
+        steps={[
+          { title: t.tourWelcomeTitle, body: t.tourWelcomeBody },
+          { target: 'toolbar', title: t.tourToolbarTitle, body: t.tourToolbarBody },
+          { target: 'view', title: t.tourViewTitle, body: t.tourViewBody },
+          { target: 'summary', title: t.tourSummaryTitle, body: t.tourSummaryBody },
+          { target: 'actions', title: t.tourActionsTitle, body: t.tourActionsBody },
+          { target: 'thread', title: t.tourThreadTitle, body: t.tourThreadBody },
+          { title: t.tourDoneTitle, body: t.tourDoneBody },
+        ]}
+      />
 
       {/* ברשימה — לחיצה על שורה פותחת את אותו כרטיס מלא (עריכה + שיחה) */}
       <Dialog open={!!openLead} onOpenChange={(o) => !o && setOpenLead(null)}>
@@ -305,7 +350,7 @@ function MyLeadsList({ leads, t, onSelect }) {
   );
 }
 
-function LeadCard({ lead, t, selectedRep }) {
+function LeadCard({ lead, t, selectedRep, tourTarget = false }) {
   const queryClient = useQueryClient();
   const [showTransfer, setShowTransfer] = useState(false);
 
@@ -350,7 +395,7 @@ function LeadCard({ lead, t, selectedRep }) {
 
        <div className="w-full flex flex-col gap-2">
          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">עדכן את הליד:</div>
-         <div className="flex items-center gap-2 flex-wrap">
+         <div className="flex items-center gap-2 flex-wrap" data-tour={tourTarget ? 'actions' : undefined}>
            <button
              onClick={toggleQuality}
              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
@@ -450,7 +495,9 @@ function LeadCard({ lead, t, selectedRep }) {
         </div>
       )}
 
-      <LeadThread leadId={lead.id} onChanged={() => queryClient.invalidateQueries({ queryKey: ['my-leads'] })} />
+      <div data-tour={tourTarget ? 'thread' : undefined}>
+        <LeadThread leadId={lead.id} onChanged={() => queryClient.invalidateQueries({ queryKey: ['my-leads'] })} />
+      </div>
     </div>
   );
 }
