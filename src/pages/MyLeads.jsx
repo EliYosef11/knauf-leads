@@ -128,42 +128,9 @@ function MyLeadsContent() {
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
         {/* סרגל סינון בשורה אחת. שם הנציג הוסר — הוא רואה רק את שלו ממילא.
             הערכים עצמם ("כל הכנסים", "כל הסטטוסים") משמשים כתווית, אז אין צורך בכותרות. */}
-        <div className="bg-card border border-border rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          {/* הסיכום בצד ימין */}
-          {leads.length > 0 && (
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span>{t.totalLabel}: <strong className="text-foreground">{filtered.length}</strong></span>
-              <span>{t.qualityLabel}: <strong className="text-amber-500">{filtered.filter(l => l.is_quality).length}</strong></span>
-              <span>{t.doneLabel}: <strong className="text-green-600">{filtered.filter(l => l.status === 'טופל').length}</strong></span>
-            </div>
-          )}
-
-          {/* פקדים: מתג תצוגה, סינון וייצוא — הכול באותה שורה */}
+        <div className="bg-card border border-border rounded-2xl px-4 py-3 flex flex-col gap-2">
+          {/* שורת הפקדים: סינון, ייצוא, ואחריהם מתג התצוגה */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex rounded-lg border border-border overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setViewPersisted('detailed')}
-                title={t.viewDetailed}
-                className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium transition-colors ${
-                  view === 'detailed' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-secondary'
-                }`}
-              >
-                <LayoutList className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{t.viewDetailed}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewPersisted('list')}
-                title={t.viewList}
-                className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium transition-colors border-s border-border ${
-                  view === 'list' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-secondary'
-                }`}
-              >
-                <Rows3 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{t.viewList}</span>
-              </button>
-            </div>
             {availableEvents.length > 0 && (
               <>
                 <Select value={selectedEvent} onValueChange={setSelectedEvent}>
@@ -215,7 +182,40 @@ function MyLeadsContent() {
                 {t.exportCsv}
               </Button>
             )}
+            <div className="inline-flex rounded-lg border border-border overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setViewPersisted('detailed')}
+                title={t.viewDetailed}
+                className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium transition-colors ${
+                  view === 'detailed' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-secondary'
+                }`}
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{t.viewDetailed}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewPersisted('list')}
+                title={t.viewList}
+                className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium transition-colors border-s border-border ${
+                  view === 'list' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:bg-secondary'
+                }`}
+              >
+                <Rows3 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{t.viewList}</span>
+              </button>
+            </div>
           </div>
+
+          {/* הסיכום מתחת לסינון */}
+          {leads.length > 0 && (
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span>{t.totalLabel}: <strong className="text-foreground">{filtered.length}</strong></span>
+              <span>{t.qualityLabel}: <strong className="text-amber-500">{filtered.filter(l => l.is_quality).length}</strong></span>
+              <span>{t.doneLabel}: <strong className="text-green-600">{filtered.filter(l => l.status === 'טופל').length}</strong></span>
+            </div>
+          )}
         </div>
 
         {isLoading ? (
