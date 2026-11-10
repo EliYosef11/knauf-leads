@@ -86,6 +86,13 @@ const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/config/auth
     mailer_templates_confirmation_content: LOGIN_CODE_TEMPLATE,
     mailer_subjects_invite: 'קוד הכניסה שלך למערכת הלידים',
     mailer_templates_invite_content: LOGIN_CODE_TEMPLATE,
+    // 10.11.2026: גם איפוס סיסמה ושינוי מייל — אף אחד מהם לא בשימוש אצלנו (אין סיסמאות),
+    // אבל כל אחד יכול לבקש "איפוס" דרך ה-API הציבורי, והתבנית ברירת המחדל שולחת קישור.
+    // שום מייל שיוצא מהמערכת לא יכיל קישור.
+    mailer_subjects_recovery: 'קוד הכניסה שלך למערכת הלידים',
+    mailer_templates_recovery_content: LOGIN_CODE_TEMPLATE,
+    mailer_subjects_email_change: 'קוד אימות למערכת הלידים',
+    mailer_templates_email_change_content: LOGIN_CODE_TEMPLATE,
 
     site_url: 'https://knauf-il-leads.com',
     uri_allow_list: 'http://localhost:5173,http://localhost:5173/**,https://knauf-il-leads.com/**',
@@ -111,4 +118,5 @@ console.log('הוגדר:', {
   templateShowsCode: config.mailer_templates_magic_link_content.includes('{{ .Token }}'),
   signupTemplateShowsCode: config.mailer_templates_confirmation_content.includes('{{ .Token }}'),
   signupSubject: config.mailer_subjects_confirmation,
+  anyTemplateHasLink: Object.entries(config).some(([k, v]) => k.startsWith('mailer_templates_') && k.endsWith('_content') && /https?:\/\/|href=|ConfirmationURL|SiteURL/.test(String(v))),
 });
