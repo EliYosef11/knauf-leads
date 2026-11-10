@@ -20,6 +20,8 @@ import UserBadge from '@/components/auth/UserBadge';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
 import { enqueue, flushQueue, pendingCount } from '@/lib/offline-queue';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PRIVACY_CONTACT_EMAIL, PRIVACY_POLICY_URL, BACKUP_RETENTION_DAYS, RETENTION_MONTHS } from '@/lib/privacy';
 
 const EMPTY = {
   full_name: '',
@@ -32,7 +34,8 @@ const EMPTY = {
   rep_notes: '',
   assigned_to: '',
   project_handling: '',
-  is_quality: false
+  is_quality: false,
+  marketing_consent: false
 };
 
 export default function LeadForm() {
@@ -358,6 +361,19 @@ export default function LeadForm() {
             </div>
           </Field>
 
+          {/* הסכמה לדיוור שיווקי (GDPR): נפרדת מהבסיס החוקי של הליד עצמו, ברירת מחדל לא מסומן */}
+          <label className="flex items-start gap-3 rounded-xl border border-border bg-secondary/30 px-4 py-3 cursor-pointer select-none">
+            <Checkbox
+              checked={form.marketing_consent}
+              onCheckedChange={(v) => update('marketing_consent', v === true)}
+              className="mt-0.5"
+            />
+            <span className="text-sm leading-snug text-foreground">
+              {t.marketingConsent}
+              <span className="block text-xs text-muted-foreground mt-0.5">{t.marketingConsentHint}</span>
+            </span>
+          </label>
+
           {error &&
             <div className="px-4 py-3 rounded-xl bg-destructive/10 text-destructive text-sm font-medium">
               {error}
@@ -386,15 +402,17 @@ export default function LeadForm() {
         </p>
         {/* הודעת פרטיות (GDPR סעיף 13) לאדם שפרטיו נאספים — הנציג מקריא/מראה בעת הצורך */}
         <p className="text-center text-[11px] leading-relaxed text-white/50 mt-3 max-w-md mx-auto">
-          {t.privacyNotice}{' '}
+          {t.privacyNotice(RETENTION_MONTHS, BACKUP_RETENTION_DAYS)}{' '}
           <a
-            href="https://knauf.com/he-IL/privacy-policy"
+            href={PRIVACY_POLICY_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-white/80"
           >
             {t.privacyLink}
           </a>
+          {' · '}{t.privacyContact}{' '}
+          <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`} className="underline hover:text-white/80" dir="ltr">{PRIVACY_CONTACT_EMAIL}</a>
         </p>
         <div className="mt-8 flex justify-center">
           <img

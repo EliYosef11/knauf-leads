@@ -49,9 +49,10 @@ No other third parties receive data. There are **no advertising, analytics or tr
 | Admins | Knauf Israel employees | Knauf email address |
 
 - **Personal data (GDPR):** yes – business contact details of prospects (B2B). Lawful basis: legitimate interest / pre-contractual steps. No special-category data. No data on minors. Data-subject requests (access, correction, deletion) are handled by an administrator; full export available.
-- **Privacy notice:** shown on the lead form (purpose, EU storage, retention, rights), linking to the Knauf privacy policy at knauf.com/he-IL/privacy-policy.
+- **Privacy notice:** shown on the lead form (purpose, EU storage, 24-month retention, backup window, rights), linking to the Knauf privacy policy at knauf.com/he-IL/privacy-policy and naming the privacy contact (Keren Shay, keren.shay@knauf.com) for data-subject requests.
 - **Data residency:** EU (Frankfurt).
-- **Retention:** leads are retained for sales follow-up; records can be deleted by an administrator at any time. A formal retention period can be set per Knauf policy (recommendation: 24 months after last contact).
+- **Retention:** leads are deleted automatically 24 months after the last contact (nightly job, logged in `retention_log`); deleted records fall out of the daily backups within 30 days. An administrator can delete any record earlier on request. Representatives see a handled lead for 6 months; after that only administrators can.
+- **Marketing consent:** collected separately via an opt-in checkbox on the form (default off), with the time of consent recorded. Without it, contact data is used only to follow up on the enquiry itself.
 - **Volume:** currently ~55 leads; a few hundred per year expected.
 
 ### 5. Authentication and access control
@@ -90,6 +91,7 @@ No other third parties receive data. There are **no advertising, analytics or tr
 
 - Database and function logs are retained by Supabase (access limited to the system owner).
 - Each email notification's delivery status and timestamp is recorded on the lead record.
+- Sub-processors and their data-processing agreements are listed in `docs/processors.md`.
 
 ### 10. Optional alternative that may simplify approval
 

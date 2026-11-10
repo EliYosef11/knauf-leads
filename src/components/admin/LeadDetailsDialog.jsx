@@ -11,6 +11,8 @@ import { db } from '@/api/db';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import InterestSelector from '../lead-form/InterestSelector';
 import LeadThread from '../lead-form/LeadThread';
+import { deletionDate, timeUntil, RETENTION_MONTHS } from '@/lib/privacy';
+import { Trash2 as TrashIcon } from 'lucide-react';
 
 const ROLES = ["אדריכל/ית", "קבלן/ית", "מפקח/ית", "יזם/ית", "מעצב/ת פנים", "מהנדס/ת", "מנהל/ת פרויקט", "יועץ/ת", "פרטי", "אחר"];
 
@@ -139,6 +141,28 @@ export default function LeadDetailsDialog({ lead, onClose, t = {} }) {
             <Row label={t.labelProjectHandling || 'טיפול בפרויקט'} value={lead.project_handling} />
             <Row label={t.labelEvent || 'כנס'} value={lead.event_name} />
             <Row label={t.labelAssigned || 'לטיפול'} value={lead.assigned_to} />
+            <Row
+              label={t.labelMarketingConsent || 'הסכמה לדיוור'}
+              value={lead.marketing_consent
+                ? `${t.consentYes || 'אישר/ה'}${lead.marketing_consent_at ? ` · ${new Date(lead.marketing_consent_at).toLocaleDateString('he-IL')}` : ''}`
+                : (t.consentNo || 'לא אישר/ה')}
+            />
+            {/* GDPR: מתי הליד יימחק אוטומטית (24 חודשים מהמגע האחרון) — למנהל בלבד */}
+            {(() => {
+              const d = deletionDate(lead);
+              return d ? (
+                <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-3">
+                  <span className="text-muted-foreground inline-flex items-center gap-1.5">
+                    <TrashIcon className="w-3.5 h-3.5" />{t.labelDeletion || 'מחיקה אוטומטית'}
+                  </span>
+                  <span className="text-end">
+                    <span className="font-medium text-foreground" dir="ltr">{d.toLocaleDateString('he-IL')}</span>
+                    <span className="text-muted-foreground"> · {timeUntil(d)}</span>
+                    <span className="block text-[11px] text-muted-foreground">{(t.deletionHint || ((m) => `${m} חודשים מהמגע האחרון`))(RETENTION_MONTHS)}</span>
+                  </span>
+                </div>
+              ) : null;
+            })()}
             {lead.interests?.length > 0 && (
               <div>
                 <div className="text-muted-foreground mb-2">{t.labelInterests || 'תחומי עניין'}</div>

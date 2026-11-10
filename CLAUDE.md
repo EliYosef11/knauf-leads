@@ -57,10 +57,19 @@ npm run dev      # Vite על 5173, מדבר ישירות עם Supabase
 | `/admin` | אדמין | לוח ניהול, טבלת לידים, ייצוא |
 | `/events` `/representatives` `/campaigns` `/settings` | אדמין | ניהול |
 
+### GDPR — [supabase/gdpr.sql](supabase/gdpr.sql), [src/lib/privacy.js](src/lib/privacy.js), [docs/processors.md](docs/processors.md)
+- **מחיקה אוטומטית** 24 חודשים מהמגע האחרון (`updated_date`), cron `lead-retention` 03:00 UTC, יומן ב-`retention_log`.
+  המנהל רואה בפרטי הליד את תאריך המחיקה והספירה לאחור. ליד מחוק נשאר בגיבוי עד 30 יום.
+- **הסכמה לדיוור** — תיבת סימון בטופס → `marketing_consent` + `marketing_consent_at` (טריגר). בלי הסכמה
+  הלידים משמשים רק למעקב על הפנייה עצמה.
+- **נציג רואה ליד "טופל" רק 6 חודשים** (`rep_can_see_lead`), אחר כך מנהל בלבד. ליד פתוח — תמיד.
+- **ממונה פרטיות:** קרן שי (`PRIVACY_CONTACT_EMAIL`), מופיעה בהודעת הפרטיות בטופס.
+- הקבועים (24/30/6) חייבים להתאים בין `privacy.js` ל-`gdpr.sql`.
+
 ### הרשאות (RLS) — [supabase/policies.sql](supabase/policies.sql)
 - אורח: **כלום.** לא קורא כנסים/נציגים/לידים ולא יוצר ליד; רק `can_login` כדי לבקש קוד. (עד 26.10 הטופס היה פתוח לכולם.)
 - נציג מחובר: קורא `events` ו-`representatives` (הטופס צריך אותם), יוצר `leads` — גם עבור נציג אחר.
-- נציג מחובר: קורא ומעדכן רק לידים שה-`assigned_email` שלהם שווה למייל שלו.
+- נציג מחובר: קורא ומעדכן רק לידים שה-`assigned_email` שלהם שווה למייל שלו — ולא לידים שטופלו לפני יותר מ-6 חודשים (ראו GDPR).
 - אדמין (שורה ב-`public.admins`): הכל. הבדיקה היא `is_admin()` בשרת, לעולם לא בצד הלקוח.
 - **מי בכלל יכול להתחבר:** `can_login(email)` מחזירה true רק לנציג פעיל או לאדמין.
   `auth.sendCode` קוראת לה לפני שליחת הקוד, כך שכתובת שאינה במערכת לא מקבלת מייל כלל.
