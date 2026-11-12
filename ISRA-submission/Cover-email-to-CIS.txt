@@ -1,0 +1,34 @@
+To:  cis.advisory@knauf.com
+Cc:  Mahmoud.Abdullah@knauf.com; Satish Salunkhe (RITM0913163)
+Subject: ISRA submission – Knauf Israel Conference Leads application (knauf-il-leads.com) – RITM0913163
+
+Dear CIS Advisory team,
+
+Following the Information Security Risk Acceptance Procedure (ISRAP), and on the advice of Mahmoud Abdullah (Network Security), I am submitting an ISRA for a Knauf Israel application.
+
+What it is
+knauf-il-leads.com is a small web application owned and operated by Knauf Israel. Our sales representatives use it to capture leads at trade conferences (name, phone, e-mail, company, role, area of interest), assign each lead to a representative and follow it up until it is entered into the CRM. It is the first stage of the lead process, before CRM entry. About 19 users; a few hundred leads per year.
+
+Why an ISRA
+The site is blocked on Knauf-managed devices by the web access policy (Zscaler, "Professional Services" category), so representatives cannot do the follow-up work from their Knauf laptops. Mahmoud has approved the URL access itself subject to your assessment, since the application collects customer contact data (PII).
+
+Key facts for your assessment
+- Hosting: Supabase (database, authentication, server functions) in AWS eu-central-1 Frankfurt; Netlify serves only the static front-end files. No connection to any Knauf system.
+- Access: every screen requires sign-in with a one-time code to the user's Knauf mailbox; only pre-registered representatives can sign in; no passwords stored; authorisation enforced in the database (row-level security).
+- Data: B2B business contact details only; no special-category data. Privacy notice on the form with the Knauf privacy policy link and a named privacy contact (Keren Shay).
+- Retention: leads are deleted automatically 24 months after the last contact; backups roll off within 30 days. Marketing consent is collected separately (opt-in).
+- Sub-processors: Supabase and Netlify under their DPAs (attached). The outbound notification mailbox is currently a Gmail account without a DPA — this is the one open point, and we would welcome your guidance on moving it to a Knauf mailbox / SMTP relay.
+- Risk rating proposed: Low. Business-unit signature is in section 10 of the ISRAD.
+
+Attachments
+1. ISRAD_knauf-il-leads_Knauf-Israel.docx – the completed Risk Acceptance Document
+2. Security-Fact-Sheet_knauf-il-leads.pdf – system description (hosting, data, access control, backups)
+3. Sub-processor-register_knauf-il-leads.pdf – processors and DPAs
+4. netlify-dpa.pdf, supabase-dpa.pdf – the processors' data-processing agreements
+
+I am happy to answer any questions, provide further details, or adjust the setup to your requirements.
+
+Kind regards,
+Eli Yosef
+Knauf Israel
+eli.yosef@knauf.com

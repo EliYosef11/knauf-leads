@@ -1,7 +1,7 @@
 # Knauf Israel – Conference Leads System
 ## Security & Risk Assessment Fact Sheet (for ISRA / RITM0913163)
 
-Prepared for Knauf IT Security. All statements below describe the system as deployed on 2026-10-27.
+Prepared for Knauf IT Security. All statements below describe the system as deployed on 2026-11-12.
 
 ---
 
