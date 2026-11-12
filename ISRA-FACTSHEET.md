@@ -83,6 +83,7 @@ No other third parties receive data. There are **no advertising, analytics or tr
 ### 8. Email notifications – known point for review
 
 - When a lead is created, the assigned representative receives an email at their **Knauf address** with the lead details. Daily reminder emails are sent for leads not yet handled.
+- **Recipients are Knauf Israel representatives only.** The system never sends e-mail to the lead/customer; all customer contact happens by the representative, and once the lead is entered into the Knauf CRM, the CRM is the system of record.
 - Emails are sent from a dedicated Gmail mailbox (`knauf.il.leads@gmail.com`) over authenticated SMTP/TLS. This mailbox is **not** a Knauf-managed account.
 - Emails deliberately contain **no links** (to comply with Knauf's inbound mail filtering).
 - **If Knauf IT prefers**, sending can be switched to a Knauf-controlled mailbox or SMTP relay with no change to the application; only the credentials change. We are happy to do this as part of the approval.

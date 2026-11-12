@@ -7,7 +7,7 @@
 |---|---|---|---|---|---|
 | **Supabase Inc.** | מסד נתונים, אימות, פונקציות שרת, אחסון גיבויים | כל נתוני הלידים והנציגים | AWS eu-central-1, פרנקפורט | חלק מתנאי השירות; מתקבל אוטומטית עם קבלת התנאים ("acceptance of the Agreement shall have the same effect as signing the SCCs"). https://supabase.com/legal/dpa | `docs/dpa/supabase-dpa.pdf` (הדפסה של העמוד) |
 | **Netlify Inc.** | אירוח קובצי הממשק הסטטיים בלבד | **אין** נתונים אישיים — HTML/JS/CSS בלבד; הדפדפן של המשתמש פונה ישירות ל-Supabase | CDN גלובלי | https://www.netlify.com/pdf/netlify-dpa.pdf (חל אוטומטית על כל לקוח) | `docs/dpa/netlify-dpa.pdf` |
-| **Google LLC (Gmail)** | שליחת מיילי התראה לנציגים וקודי כניסה | שם, טלפון, מייל וחברה של הליד — בגוף המייל לנציג; שמורים בתיבת "נשלח" | Google (גלובלי) | ⚠️ **אין DPA.** `knauf.il.leads@gmail.com` הוא חשבון Gmail צרכני; ה-DPA של Google (Cloud/Workspace) אינו חל עליו. | — |
+| **Google LLC (Gmail)** | שליחת מיילי התראה **לנציגי קנאוף בלבד** וקודי כניסה. המערכת לעולם לא שולחת מייל לליד/ללקוח | שם, טלפון, מייל וחברה של הליד — בגוף המייל לנציג; שמורים בתיבת "נשלח" | Google (גלובלי) | ⚠️ **אין DPA.** `knauf.il.leads@gmail.com` הוא חשבון Gmail צרכני; ה-DPA של Google (Cloud/Workspace) אינו חל עליו. | — |
 
 ## נקודה פתוחה — Gmail
 

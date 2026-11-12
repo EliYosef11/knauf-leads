@@ -17,6 +17,7 @@ Key facts for your assessment
 - Access: every screen requires sign-in with a one-time code to the user's Knauf mailbox; only pre-registered representatives can sign in; no passwords stored; authorisation enforced in the database (row-level security).
 - Data: B2B business contact details only; no special-category data. Privacy notice on the form with the Knauf privacy policy link and a named privacy contact (Keren Shay).
 - Retention: leads are deleted automatically 24 months after the last contact; backups roll off within 30 days. Marketing consent is collected separately (opt-in).
+- E-mail: the system notifies Knauf Israel representatives only (internal recipients, no links). It never e-mails the lead/customer; customer contact is done by the representative, and once a lead is entered into the Knauf CRM, the CRM is the system of record.
 - Sub-processors: Supabase and Netlify under their DPAs (attached). The outbound notification mailbox is currently a Gmail account without a DPA — this is the one open point, and we would welcome your guidance on moving it to a Knauf mailbox / SMTP relay.
 - Risk rating proposed: Low. Business-unit signature is in section 10 of the ISRAD.
 
