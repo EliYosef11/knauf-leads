@@ -86,8 +86,12 @@ npm run dev      # Vite על 5173, מדבר ישירות עם Supabase
 - **כל הרשאות הנציג תלויות ב-`is_member()`** ([supabase/membership.sql](supabase/membership.sql), 26.11.2026): נציג פעיל או אדמין,
   נבדק בשרת בכל בקשה. בלי זה, מי שפנה ישירות ל-API של Supabase Auth עם כתובת משלו (ההרשמה שם פתוחה — כניסה
   ראשונה של נציג היא "הרשמה") קיבל סשן וקרא כנסים/נציגים ויצר לידים. גם נציג שהושבת מאבד גישה מיד, לא רק בכניסה הבאה.
-  ⚠️ **עדיין פתוח:** ה-Edge Functions שנקראות מהדפדפן (`transfer-lead`, `export-event-email`, `send-test-email`,
-  `send-reminder-email`) לא בודקות מי הקורא — כל סשן תקף מספיק.
+- **Edge Functions בודקות מי קורא** (`_shared/auth.ts`, 26.11.2026) — אימות ה-JWT בשער רק מוודא שהטוקן תקף.
+  `send-lead-notification`, `send-reminder-email`, `export-event-email`, `send-test-email`, `daily-backup`: אדמין או מפתח
+  השירות (טריגר/cron). `transfer-lead`: אדמין, או הנציג שהליד משויך אליו; היעד חייב להיות נציג פעיל.
+  מפתח השירות מזוהה לפי מה שהוא מסוגל לעשות (קריאת `admins`), כי המפתח ב-`private.config` **אינו זהה**
+  ל-`SUPABASE_SERVICE_ROLE_KEY` שמוזרק לפונקציה — השוואת מחרוזות לבדה חסמה את ה-cron.
+  פריסה מהענן: `npx supabase functions deploy <fn> --project-ref <ref> --use-api`.
 - אדמין (שורה ב-`public.admins`): הכל. הבדיקה היא `is_admin()` בשרת, לעולם לא בצד הלקוח.
 - **מי בכלל יכול להתחבר:** `can_login(email)` מחזירה true רק לנציג פעיל או לאדמין.
   `auth.sendCode` קוראת לה לפני שליחת הקוד, כך שכתובת שאינה במערכת לא מקבלת מייל כלל.

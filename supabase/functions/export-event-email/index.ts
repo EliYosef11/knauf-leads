@@ -9,6 +9,7 @@
 import { sendMail } from '../_shared/mailer.ts';
 import { eventReportHtml } from '../_shared/templates/eventReport.ts';
 import { preflight, json } from '../_shared/http.ts';
+import { identify, forbidden } from '../_shared/auth.ts';
 
 interface ExportLead {
   full_name?: string;
@@ -27,6 +28,10 @@ Deno.serve(async (req) => {
   if (pre) return pre;
 
   try {
+    // אדמין או מפתח השירות (טריגר / cron) בלבד
+    const caller = await identify(req);
+    if (!caller.isAdmin) return forbidden();
+
     const { eventName, email, leads } = await req.json().catch(() => ({}));
 
     if (!eventName || !email || !leads?.length) {

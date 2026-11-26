@@ -9,6 +9,7 @@
 
 import { serviceClient } from '../_shared/db.ts';
 import { preflight, json } from '../_shared/http.ts';
+import { identify, forbidden } from '../_shared/auth.ts';
 
 const BUCKET = 'backups';
 const TABLES = ['leads', 'events', 'representatives', 'campaigns', 'notification_settings', 'admins'];
@@ -19,6 +20,10 @@ Deno.serve(async (req) => {
   if (pre) return pre;
 
   try {
+    // אדמין או מפתח השירות (טריגר / cron) בלבד
+    const caller = await identify(req);
+    if (!caller.isAdmin) return forbidden();
+
     const client = serviceClient();
     const snapshot: Record<string, unknown[]> = {};
 

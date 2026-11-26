@@ -12,12 +12,17 @@ import { serviceClient, notificationEmails, type Lead } from '../_shared/db.ts';
 import { sendMail } from '../_shared/mailer.ts';
 import { newLeadHtml } from '../_shared/templates/newLead.ts';
 import { preflight, json } from '../_shared/http.ts';
+import { identify, forbidden } from '../_shared/auth.ts';
 
 Deno.serve(async (req) => {
   const pre = preflight(req);
   if (pre) return pre;
 
   try {
+    // אדמין או מפתח השירות (טריגר / cron) בלבד
+    const caller = await identify(req);
+    if (!caller.isAdmin) return forbidden();
+
     const client = serviceClient();
     const body = await req.json().catch(() => ({}));
 
