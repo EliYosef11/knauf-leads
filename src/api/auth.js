@@ -103,7 +103,15 @@ export const auth = {
       token: token.trim(),
       type: 'email',
     });
-    if (error) throw describe(error, 'הקוד שגוי או פג תוקף.');
+    if (error) {
+      // נרשם ביומן הכניסות כניסיון שנכשל; תקלה ברישום לא משנה את ההודעה למשתמש
+      try {
+        await supabase.rpc('log_failed_code', { p_email: email.trim().toLowerCase() });
+      } catch {
+        // היומן לצפייה בלבד
+      }
+      throw describe(error, 'הקוד שגוי או פג תוקף.');
+    }
     await auth.logLogin('login');
     return data.session;
   },

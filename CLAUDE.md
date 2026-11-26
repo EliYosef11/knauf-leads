@@ -48,6 +48,10 @@ npm run dev      # Vite על 5173, מדבר ישירות עם Supabase
   `log_login()` (המייל מה-JWT בשרת): `login` = הזדהות בקוד, `visit` = פתיחת האפליקציה עם סשן קיים (לכל היותר
   פעם בשעה למשתמש). קריאה לאדמין בלבד. נמחק אחרי 6 חודשים (cron `login-log-retention` 03:10 UTC,
   `LOGIN_LOG_MONTHS` ב-`privacy.js`).
+  **ניסיונות שנכשלו** (עם IP): `denied` = בקשת קוד לכתובת לא רשומה, `code_request` = בקשת קוד לכתובת רשומה
+  (שתיהן נרשמות בתוך `can_login`, שהפכה ל-volatile), `bad_code` = קוד שגוי (`log_failed_code`, מדווח מהדפדפן).
+  מוגן מהצפה (פעם בדקה לכתובת+סוג, 300 בשעה בסך הכול). **לא רואה** פנייה ישירה ל-API של Supabase Auth.
+  `scripts/preflight.mjs` קורא ל-`can_login` ולכן משאיר רשומות ביומן.
 - **מי הזין** (4.11.2026): טריגר `set_lead_author` ממלא `created_by`/`created_by_id` מה-JWT בכל
   INSERT מחובר. לידים ישנים (Base44 + 28.10–3.11) — לא ידוע, ולא מציגים.
 - **שיחה על ליד** (`lead_notes`, [supabase/notes.sql](supabase/notes.sql)): כל עדכון הוא הודעה עם

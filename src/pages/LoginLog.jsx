@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { db } from '@/api/db';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowRight, History, Loader2, Smartphone, Monitor, KeyRound, RotateCw, Users } from 'lucide-react';
+import { ArrowRight, History, Loader2, Smartphone, Monitor, KeyRound, RotateCw, Users, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
 import AdminGuard from '../components/admin/AdminGuard';
 import KnaufLogo from '../components/lead-form/KnaufLogo';
@@ -35,8 +35,33 @@ function LoginLogContent() {
 
   const { data: entries = [], isLoading, error } = useQuery({
     queryKey: ['login-log'],
-    queryFn: () => db.LoginLog.list('-at', 1000),
+    queryFn: () => db.LoginLog.filter({ kind: { $in: ['login', 'visit'] } }, '-at', 1000),
   });
+
+  const { data: attempts = [] } = useQuery({
+    queryKey: ['login-log-attempts'],
+    queryFn: () => db.LoginLog.filter({ kind: { $in: ['denied', 'bad_code', 'code_request'] } }, '-at', 1000),
+  });
+
+  // מה נחשב "נכשל": כתובת לא רשומה, קוד שגוי, וקוד שנשלח לכתובת רשומה בלי שבאה אחריו
+  // כניסה תוך שעה (תוקף הקוד). בקשה מרבע השעה האחרונה עוד לא נספרת — אולי הקוד בדרך.
+  const failures = useMemo(() => {
+    const HOUR = 3_600_000;
+    const logins = entries.filter((entry) => entry.kind === 'login');
+    return attempts.filter((attempt) => {
+      if (attempt.kind !== 'code_request') return true;
+      const sent = new Date(attempt.at).getTime();
+      if (Date.now() - sent < HOUR / 4) return false;
+      return !logins.some((login) => {
+        const at = new Date(login.at).getTime();
+        return login.email.toLowerCase() === attempt.email.toLowerCase() && at >= sent && at - sent <= HOUR;
+      });
+    });
+  }, [attempts, entries]);
+
+  const recentFailures = failures.filter((attempt) => Date.now() - new Date(attempt.at).getTime() < 86_400_000).length;
+  const failureLabel = (kind) =>
+    kind === 'denied' ? t.loginLogKindDenied : kind === 'bad_code' ? t.loginLogKindBadCode : t.loginLogKindUnused;
 
   const { data: reps = [] } = useQuery({
     queryKey: ['representatives'],
@@ -203,6 +228,59 @@ function LoginLogContent() {
                           </span>
                         )}
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-card border border-border rounded-2xl p-6">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-destructive" />
+              <h2 className="font-display font-semibold text-lg">{t.loginLogFailedTitle}</h2>
+            </div>
+            {recentFailures > 0 && (
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-destructive/10 text-destructive">
+                {t.loginLogFailedRecent(recentFailures)}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">{t.loginLogFailedDesc}</p>
+
+          {failures.length === 0 ? (
+            <div className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
+              {t.loginLogFailedEmpty}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[540px] text-sm">
+                <thead>
+                  <tr className="text-muted-foreground border-b border-border">
+                    <th className="text-start font-medium py-2 pe-3 sm:pe-4">{t.loginLogWhen}</th>
+                    <th className="text-start font-medium py-2 pe-3 sm:pe-4">{t.loginLogAddress}</th>
+                    <th className="text-start font-medium py-2 pe-3 sm:pe-4">{t.loginLogKind}</th>
+                    <th className="text-start font-medium py-2">{t.loginLogIp}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {failures.map((attempt) => (
+                    <tr key={attempt.id} className="border-b border-border/60 last:border-0">
+                      <td className="py-2.5 pe-3 sm:pe-4 whitespace-nowrap"><span dir="ltr">{formatWhen(attempt.at)}</span></td>
+                      <td className="py-2.5 pe-3 sm:pe-4">
+                        {nameByEmail.has(attempt.email.toLowerCase()) && (
+                          <div className="font-medium">{displayName(attempt.email)}</div>
+                        )}
+                        <div className="text-xs text-muted-foreground"><span dir="ltr">{attempt.email}</span></div>
+                      </td>
+                      <td className="py-2.5 pe-3 sm:pe-4">
+                        <span className={attempt.kind === 'code_request' ? 'text-muted-foreground' : 'text-destructive font-medium'}>
+                          {failureLabel(attempt.kind)}
+                        </span>
+                      </td>
+                      <td className="py-2.5 whitespace-nowrap text-muted-foreground"><span dir="ltr">{attempt.ip || '—'}</span></td>
                     </tr>
                   ))}
                 </tbody>
