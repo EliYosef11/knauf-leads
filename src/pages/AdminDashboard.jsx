@@ -5,7 +5,7 @@ import { db } from '@/api/db';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Download, Settings, ArrowRight, Users, Calendar, TrendingUp, Loader2, UserCog, Star, CalendarDays, FileText, FileSpreadsheet } from 'lucide-react';
+import { Search, Download, Settings, ArrowRight, Users, Calendar, TrendingUp, Loader2, UserCog, Star, CalendarDays, FileText, FileSpreadsheet, History } from 'lucide-react';
 import { format, startOfDay, endOfDay, isAfter, isBefore } from 'date-fns';
 import { jsPDF } from 'jspdf';
 
@@ -253,6 +253,12 @@ function DashboardContent() {
               <Button variant="outline" size="sm" className="gap-1.5 text-white border-white/30 hover:bg-white/10">
                 <UserCog className="w-4 h-4" />
                 <span>{t.representatives}</span>
+              </Button>
+            </Link>
+            <Link to="/login-log">
+              <Button variant="outline" size="sm" className="gap-1.5 text-white border-white/30 hover:bg-white/10">
+                <History className="w-4 h-4" />
+                <span>{t.loginLog}</span>
               </Button>
             </Link>
             <Link to="/settings">

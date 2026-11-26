@@ -27,6 +27,8 @@ export const AuthProvider = ({ children }) => {
       const current = await auth.currentSession();
       if (cancelled) return;
       setSession(current);
+      // סשן ששוחזר מהמכשיר — נרשם ביומן הכניסות כביקור (השרת מגביל לפעם בשעה)
+      if (current) auth.logLogin('visit');
       await refreshRole(current);
       if (!cancelled) setIsLoadingAuth(false);
     })();

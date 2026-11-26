@@ -14,7 +14,7 @@
 | גיבוי חם | https://knauf-il-leads.base44.app — המערכת הישנה, עדיין חיה. **אפשר לסגור** (שבועות יציבים) |
 | cron | גיבוי יומי 02:00 UTC · תזכורות 06:00 UTC · מחיקת לידים ישנים (24 חודשים) 03:00 UTC — כולם דולקים |
 | כניסה | קוד למייל (מתג החירום `DIRECT_LOGIN` כבוי) |
-| **פתוח: חסימה במחשבי קנאוף** | Zscaler חוסם את הדומיין. ISRA הוגש ל-`cis.advisory@knauf.com` (12.11; מרקוס גוטיירז מ-CIS מטפל), טיקט RITM0913163, מחמוד עבדאללה אישר את צד הגישה. החבילה ב-[ISRA-submission/](ISRA-submission/). ממתינים לאישור CIS |
+| **פתוח: חסימה במחשבי קנאוף** | Zscaler חוסם את הדומיין (טיקט RITM0913163). CIS (Marcos Gutierrez, `Sec.Advisory@knauf.com`) אישר ב-24.11 **חריגה זמנית ל-6 חודשים בלבד** (עד 25.05.2027), לא ללא הגבלה. ה-ISRAD עודכן בהתאם (סעיפים 1, 5, 6, 8). הצעדים: להחתים את הטופס (מנכ"ל/מיופה כוח) → לשלוח למרקוס + פינג ב-Teams → עם המסמך החתום לבקש מצוות Zscaler לפתוח. **בתוך 6 החודשים:** לרשום את המערכת רשמית ב-IT, או לעבור לפתרון הלידים של Knauf Digital. החבילה ב-[ISRA-submission/](ISRA-submission/) |
 | **פתוח: Gmail** | תיבת ההתראות היא חשבון Gmail צרכני בלי DPA — להחליף בתיבה/ממסר של קנאוף כש-CIS ינחו |
 
 פרויקט Supabase ישן בסידני (`jiuyfjhvyixgysmknpuf`) עדיין קיים ויימחק בסוף ההגירה;
@@ -43,7 +43,15 @@ npm run dev      # Vite על 5173, מדבר ישירות עם Supabase
 - `base44/` — **עותק ייחוס בלבד** של המקור. שום קוד חי לא מייבא ממנה.
 
 ### טבלאות
-`leads`, `events`, `representatives`, `campaigns`, `notification_settings`, `admins`, `lead_notes`.
+`leads`, `events`, `representatives`, `campaigns`, `notification_settings`, `admins`, `lead_notes`, `login_log`.
+- **יומן כניסות** (`login_log`, [supabase/login-log.sql](supabase/login-log.sql), 26.11.2026): מי נכנס ומתי. נכתב רק דרך
+  `log_login()` (המייל מה-JWT בשרת): `login` = הזדהות בקוד, `visit` = פתיחת האפליקציה עם סשן קיים (לכל היותר
+  פעם בשעה למשתמש). קריאה לאדמין בלבד. נמחק אחרי 6 חודשים (cron `login-log-retention` 03:10 UTC,
+  `LOGIN_LOG_MONTHS` ב-`privacy.js`).
+  **ניסיונות שנכשלו** (עם IP): `denied` = בקשת קוד לכתובת לא רשומה, `code_request` = בקשת קוד לכתובת רשומה
+  (שתיהן נרשמות בתוך `can_login`, שהפכה ל-volatile), `bad_code` = קוד שגוי (`log_failed_code`, מדווח מהדפדפן).
+  מוגן מהצפה (פעם בדקה לכתובת+סוג, 300 בשעה בסך הכול). **לא רואה** פנייה ישירה ל-API של Supabase Auth.
+  `scripts/preflight.mjs` קורא ל-`can_login` ולכן משאיר רשומות ביומן.
 - **מי הזין** (4.11.2026): טריגר `set_lead_author` ממלא `created_by`/`created_by_id` מה-JWT בכל
   INSERT מחובר. לידים ישנים (Base44 + 28.10–3.11) — לא ידוע, ולא מציגים.
 - **שיחה על ליד** (`lead_notes`, [supabase/notes.sql](supabase/notes.sql)): כל עדכון הוא הודעה עם
@@ -60,6 +68,7 @@ npm run dev      # Vite על 5173, מדבר ישירות עם Supabase
 | `/my-leads` | נציג מחובר | הלידים שלו בלבד — גם אדמין רואה כאן רק את שלו (לכל הלידים יש `/admin`). תצוגה מפורטת/רשימה (נשמר ב-localStorage). **סיור מודרך** (`components/tour/QuickTour`) נפתח בכניסה הראשונה לכל משתמש במכשיר (`knauf_tour_my_leads_v1:<email>`), עם "אל תציג שוב" וכפתור ? לפתיחה חוזרת |
 | `/admin` | אדמין | לוח ניהול, טבלת לידים, ייצוא |
 | `/events` `/representatives` `/campaigns` `/settings` | אדמין | ניהול |
+| `/login-log` | אדמין | יומן כניסות — סיכום לפי משתמש (כולל נציגים שלא נכנסו אף פעם) ורשימת כל הכניסות |
 
 ### GDPR — [supabase/gdpr.sql](supabase/gdpr.sql), [src/lib/privacy.js](src/lib/privacy.js), [docs/processors.md](docs/processors.md)
 - **מחיקה אוטומטית** 24 חודשים מהמגע האחרון (`updated_date`), cron `lead-retention` 03:00 UTC, יומן ב-`retention_log`.
@@ -74,6 +83,15 @@ npm run dev      # Vite על 5173, מדבר ישירות עם Supabase
 - אורח: **כלום.** לא קורא כנסים/נציגים/לידים ולא יוצר ליד; רק `can_login` כדי לבקש קוד. (עד 26.10 הטופס היה פתוח לכולם.)
 - נציג מחובר: קורא `events` ו-`representatives` (הטופס צריך אותם), יוצר `leads` — גם עבור נציג אחר.
 - נציג מחובר: קורא ומעדכן רק לידים שה-`assigned_email` שלהם שווה למייל שלו — ולא לידים שטופלו לפני יותר מ-6 חודשים (ראו GDPR).
+- **כל הרשאות הנציג תלויות ב-`is_member()`** ([supabase/membership.sql](supabase/membership.sql), 26.11.2026): נציג פעיל או אדמין,
+  נבדק בשרת בכל בקשה. בלי זה, מי שפנה ישירות ל-API של Supabase Auth עם כתובת משלו (ההרשמה שם פתוחה — כניסה
+  ראשונה של נציג היא "הרשמה") קיבל סשן וקרא כנסים/נציגים ויצר לידים. גם נציג שהושבת מאבד גישה מיד, לא רק בכניסה הבאה.
+- **Edge Functions בודקות מי קורא** (`_shared/auth.ts`, 26.11.2026) — אימות ה-JWT בשער רק מוודא שהטוקן תקף.
+  `send-lead-notification`, `send-reminder-email`, `export-event-email`, `send-test-email`, `daily-backup`: אדמין או מפתח
+  השירות (טריגר/cron). `transfer-lead`: אדמין, או הנציג שהליד משויך אליו; היעד חייב להיות נציג פעיל.
+  מפתח השירות מזוהה לפי מה שהוא מסוגל לעשות (קריאת `admins`), כי המפתח ב-`private.config` **אינו זהה**
+  ל-`SUPABASE_SERVICE_ROLE_KEY` שמוזרק לפונקציה — השוואת מחרוזות לבדה חסמה את ה-cron.
+  פריסה מהענן: `npx supabase functions deploy <fn> --project-ref <ref> --use-api`.
 - אדמין (שורה ב-`public.admins`): הכל. הבדיקה היא `is_admin()` בשרת, לעולם לא בצד הלקוח.
 - **מי בכלל יכול להתחבר:** `can_login(email)` מחזירה true רק לנציג פעיל או לאדמין.
   `auth.sendCode` קוראת לה לפני שליחת הקוד, כך שכתובת שאינה במערכת לא מקבלת מייל כלל.

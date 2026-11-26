@@ -8,12 +8,16 @@ import { serviceClient, type Lead } from '../_shared/db.ts';
 import { sendMail } from '../_shared/mailer.ts';
 import { transferHtml } from '../_shared/templates/transfer.ts';
 import { preflight, json } from '../_shared/http.ts';
+import { identify, forbidden } from '../_shared/auth.ts';
 
 Deno.serve(async (req) => {
   const pre = preflight(req);
   if (pre) return pre;
 
   try {
+    const caller = await identify(req);
+    if (!caller.isMember) return forbidden();
+
     const client = serviceClient();
     const { lead_id, from_rep, to_rep, to_email, reason } = await req.json().catch(() => ({}));
 
@@ -23,6 +27,18 @@ Deno.serve(async (req) => {
 
     const { data: lead } = await client.from('leads').select('*').eq('id', lead_id).single<Lead>();
     if (!lead) return json({ error: 'Lead not found' }, { status: 404 });
+
+    const normalize = (value?: string | null) => (value ?? '').trim().toLowerCase();
+
+    // נציג מעביר רק ליד שמשויך אליו; אדמין — כל ליד
+    if (!caller.isAdmin && normalize(lead.assigned_email) !== caller.email) return forbidden();
+
+    // היעד חייב להיות נציג פעיל — אחרת הפונקציה שולחת את פרטי הליד לכל כתובת שתתבקש
+    if (to_email) {
+      const { data: activeReps } = await client.from('representatives').select('email').eq('is_active', true);
+      const known = (activeReps ?? []).some((rep) => normalize(rep.email) === normalize(to_email));
+      if (!known) return json({ error: 'to_email is not an active representative' }, { status: 422 });
+    }
 
     const existingLog = Array.isArray(lead.transfer_log) ? lead.transfer_log : [];
     const updatedLog = [...existingLog, {

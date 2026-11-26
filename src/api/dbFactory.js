@@ -18,6 +18,7 @@ const TABLES = {
   Representative: 'representatives',
   Campaign: 'campaigns',
   NotificationSettings: 'notification_settings',
+  LoginLog: 'login_log', // אין created_date — תמיד למיין לפי '-at'
 };
 
 const DEFAULT_LIMIT = 1000;

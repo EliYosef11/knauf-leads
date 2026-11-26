@@ -11,6 +11,7 @@ import { serviceClient, type Lead } from '../_shared/db.ts';
 import { sendMail } from '../_shared/mailer.ts';
 import { reminderHtml } from '../_shared/templates/reminder.ts';
 import { preflight, json } from '../_shared/http.ts';
+import { identify, forbidden } from '../_shared/auth.ts';
 
 const interestsOf = (lead: Lead) =>
   Array.isArray(lead.interests) && lead.interests.length ? lead.interests.join(', ') : '&mdash;';
@@ -22,6 +23,10 @@ Deno.serve(async (req) => {
   if (pre) return pre;
 
   try {
+    // אדמין (כפתורים במסך הניהול) או מפתח השירות (ה-cron היומי) בלבד
+    const caller = await identify(req);
+    if (!caller.isAdmin) return forbidden();
+
     const client = serviceClient();
     const body = await req.json().catch(() => ({}));
 

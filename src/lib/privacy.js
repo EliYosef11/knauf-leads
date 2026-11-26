@@ -6,6 +6,7 @@
 export const RETENTION_MONTHS = 24;          // מחיקה אוטומטית — חודשים מהמגע האחרון בליד
 export const BACKUP_RETENTION_DAYS = 30;     // כמה זמן ליד מחוק עוד קיים בגיבוי
 export const REP_VISIBILITY_MONTHS = 6;      // ליד "טופל" ישן מזה גלוי למנהל בלבד
+export const LOGIN_LOG_MONTHS = 6;             // יומן הכניסות נמחק אחרי כך וכך חודשים (supabase/login-log.sql)
 export const PRIVACY_CONTACT_EMAIL = 'keren.shay@knauf.com';   // הממונה על פניות פרטיות
 export const PRIVACY_POLICY_URL = 'https://knauf.com/he-IL/privacy-policy';
 
