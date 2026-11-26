@@ -12,6 +12,7 @@ import RepresentativesManager from './pages/RepresentativesManager';
 import MyLeads from './pages/MyLeads';
 import CampaignsManager from './pages/CampaignsManager';
 import Login from './pages/Login';
+import LoginLog from './pages/LoginLog';
 import RequireAuth from '@/components/auth/RequireAuth';
 
 const AuthenticatedApp = () => {
@@ -35,6 +36,7 @@ const AuthenticatedApp = () => {
       <Route path="/representatives" element={<RepresentativesManager />} />
       <Route path="/my-leads" element={<MyLeads />} />
       <Route path="/campaigns" element={<CampaignsManager />} />
+      <Route path="/login-log" element={<LoginLog />} />
       <Route path="/login" element={<Login />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>

@@ -30,7 +30,26 @@ function describe(error, fallback) {
   return new Error(`${fallback} (${error.message})`);
 }
 
+/** 'mobile' / 'desktop' — מספיק כדי לדעת אם הנציג נכנס מהטלפון או מהמחשב */
+function deviceKind() {
+  if (typeof navigator === 'undefined') return null;
+  return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+}
+
 export const auth = {
+  /**
+   * רישום ביומן הכניסות (supabase/login-log.sql). 'login' = הזדהות בקוד,
+   * 'visit' = פתיחת האפליקציה עם סשן קיים. הכתובת נקבעת בשרת מה-JWT.
+   * לעולם לא מפיל את הכניסה עצמה — תקלה ביומן נבלעת.
+   */
+  async logLogin(kind = 'login') {
+    try {
+      await supabase.rpc('log_login', { p_kind: kind, p_device: deviceKind() });
+    } catch {
+      // היומן הוא לצפייה בלבד; לא חוסמים משתמש בגללו
+    }
+  },
+
   async currentSession() {
     const { data } = await supabase.auth.getSession();
     return data.session ?? null;
@@ -58,6 +77,7 @@ export const auth = {
     if (error || !data?.ok || !data?.token) return null;
     const verified = await supabase.auth.verifyOtp({ email: normalized, token: data.token, type: 'email' });
     if (verified.error) return null;
+    await auth.logLogin('login');
     return verified.data.session;
   },
 
@@ -84,6 +104,7 @@ export const auth = {
       type: 'email',
     });
     if (error) throw describe(error, 'הקוד שגוי או פג תוקף.');
+    await auth.logLogin('login');
     return data.session;
   },
 

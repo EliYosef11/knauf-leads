@@ -43,7 +43,11 @@ npm run dev      # Vite על 5173, מדבר ישירות עם Supabase
 - `base44/` — **עותק ייחוס בלבד** של המקור. שום קוד חי לא מייבא ממנה.
 
 ### טבלאות
-`leads`, `events`, `representatives`, `campaigns`, `notification_settings`, `admins`, `lead_notes`.
+`leads`, `events`, `representatives`, `campaigns`, `notification_settings`, `admins`, `lead_notes`, `login_log`.
+- **יומן כניסות** (`login_log`, [supabase/login-log.sql](supabase/login-log.sql), 26.11.2026): מי נכנס ומתי. נכתב רק דרך
+  `log_login()` (המייל מה-JWT בשרת): `login` = הזדהות בקוד, `visit` = פתיחת האפליקציה עם סשן קיים (לכל היותר
+  פעם בשעה למשתמש). קריאה לאדמין בלבד. נמחק אחרי 6 חודשים (cron `login-log-retention` 03:10 UTC,
+  `LOGIN_LOG_MONTHS` ב-`privacy.js`).
 - **מי הזין** (4.11.2026): טריגר `set_lead_author` ממלא `created_by`/`created_by_id` מה-JWT בכל
   INSERT מחובר. לידים ישנים (Base44 + 28.10–3.11) — לא ידוע, ולא מציגים.
 - **שיחה על ליד** (`lead_notes`, [supabase/notes.sql](supabase/notes.sql)): כל עדכון הוא הודעה עם
@@ -60,6 +64,7 @@ npm run dev      # Vite על 5173, מדבר ישירות עם Supabase
 | `/my-leads` | נציג מחובר | הלידים שלו בלבד — גם אדמין רואה כאן רק את שלו (לכל הלידים יש `/admin`). תצוגה מפורטת/רשימה (נשמר ב-localStorage). **סיור מודרך** (`components/tour/QuickTour`) נפתח בכניסה הראשונה לכל משתמש במכשיר (`knauf_tour_my_leads_v1:<email>`), עם "אל תציג שוב" וכפתור ? לפתיחה חוזרת |
 | `/admin` | אדמין | לוח ניהול, טבלת לידים, ייצוא |
 | `/events` `/representatives` `/campaigns` `/settings` | אדמין | ניהול |
+| `/login-log` | אדמין | יומן כניסות — סיכום לפי משתמש (כולל נציגים שלא נכנסו אף פעם) ורשימת כל הכניסות |
 
 ### GDPR — [supabase/gdpr.sql](supabase/gdpr.sql), [src/lib/privacy.js](src/lib/privacy.js), [docs/processors.md](docs/processors.md)
 - **מחיקה אוטומטית** 24 חודשים מהמגע האחרון (`updated_date`), cron `lead-retention` 03:00 UTC, יומן ב-`retention_log`.
